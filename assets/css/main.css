@@ -1461,6 +1461,82 @@ input, select, textarea {
 			border-bottom: solid 2px #f4f4f4;
 		}
 
+		.example {
+			position: relative;
+			padding: 0;
+			width: 300px;
+			display: block;
+			cursor: pointer;
+			overflow: hidden;
+		  }
+		  .content {
+			opacity: 0;
+			font-size: 40px;
+			position: absolute;
+			top: 0;
+			left: 0;
+			color: #1c87c9;
+			background-color: rgba(200, 200, 200, 0.5);
+			width: 300px;
+			height: 300px;
+			-webkit-transition: all 400ms ease-out;
+			-moz-transition: all 400ms ease-out;
+			-o-transition: all 400ms ease-out;
+			-ms-transition: all 400ms ease-out;
+			transition: all 400ms ease-out;
+			text-align: center;
+		  }
+		  .example .content:hover {
+			opacity: 1;
+		  }
+		  .example .content .text {
+			height: 0;
+			opacity: 1;
+			transition-delay: 0s;
+			transition-duration: 0.4s;
+		  }
+		  .example .content:hover .text {
+			opacity: 1;
+			transform: translateY(250px);
+			-webkit-transform: translateY(250px);
+		  }
+
+/* quick reset */
+* {
+	margin: 0;
+	padding: 0;
+	border: 0;
+  }
+  
+  /* relevant styles */
+  .img__wrap {
+	position: relative;
+	height: 200px;
+	width: 257px;
+  }
+  
+  .img__description {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: rgba(29, 106, 154, 0.72);
+	color: #fff;
+	visibility: hidden;
+	opacity: 0;
+  
+	/* transition effect. not necessary */
+	transition: opacity .2s, visibility .2s;
+  }
+  
+  .img__wrap:hover .img__description {
+	visibility: visible;
+	opacity: 1;
+  }
+
+
+
 /* Form */
 
 	form label {
