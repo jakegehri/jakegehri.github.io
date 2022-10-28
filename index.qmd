@@ -17,7 +17,7 @@ about:
     - text: Blog
       url: "blog.qmd"
     - text: CV
-      url: "cv.pdf"
+      url: "Jake Gehri CV v_22.10.19.pdf"
 comments: false
 ---
 ::: {.column-page}

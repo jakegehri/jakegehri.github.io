@@ -1,0 +1,1665 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>Jake Gehri</title>
+<link>https://jakegehri.github.io/projects.html</link>
+<atom:link href="https://jakegehri.github.io/projects.xml" rel="self" type="application/rss+xml"/>
+<description></description>
+<generator>quarto-1.2.242</generator>
+<lastBuildDate>Wed, 19 Oct 2022 04:00:00 GMT</lastBuildDate>
+<item>
+  <title>Multi-label Classification of Amazonian Land Space</title>
+  <dc:creator>Jake Gehri</dc:creator>
+  <link>https://jakegehri.github.io/projects/Amazon/amazon.html</link>
+  <description><![CDATA[ 
+
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;">import</span> pandoc</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;">from</span> fastbook <span class="im" style="color: #00769E;">import</span> <span class="op" style="color: #5E5E5E;">*</span></span>
+<span id="cb1-3"><span class="im" style="color: #00769E;">from</span> fastai <span class="im" style="color: #00769E;">import</span> <span class="op" style="color: #5E5E5E;">*</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">creds <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'{"username":"jakegehri","key":"3d0213a52bd1816d21037e941bc77569"}'</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;"># Creates a cred path for kaggle datasets to be downloaded in comand line</span></span>
+<span id="cb3-2"></span>
+<span id="cb3-3">cred_path <span class="op" style="color: #5E5E5E;">=</span> Path(<span class="st" style="color: #20794D;">'~/.kaggle/kaggle.json'</span>).expanduser() </span>
+<span id="cb3-4"></span>
+<span id="cb3-5"><span class="cf" style="color: #003B4F;">if</span> <span class="kw" style="color: #003B4F;">not</span> cred_path.exists():</span>
+<span id="cb3-6">    cred_path.parent.mkdir(exist_ok<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>)</span>
+<span id="cb3-7">    cred_path.write_text(creds)</span>
+<span id="cb3-8">    cred_path.chmod(<span class="bn" style="color: #AD0000;">0o600</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="139">
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">path <span class="op" style="color: #5E5E5E;">=</span> Path(<span class="st" style="color: #20794D;">'./planet/planet'</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="140">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">path.ls()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="140">
+<pre><code>(#4) [Path('planet/planet/train_classes.csv'),Path('planet/planet/test-jpg'),Path('planet/planet/sample_submission.csv'),Path('planet/planet/train-jpg')]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">train <span class="op" style="color: #5E5E5E;">=</span> (path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'train-jpg'</span>).ls()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">train</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>(#40479) [Path('planet/planet/train-jpg/train_19921.jpg'),Path('planet/planet/train-jpg/train_24619.jpg'),Path('planet/planet/train-jpg/train_21510.jpg'),Path('planet/planet/train-jpg/train_31089.jpg'),Path('planet/planet/train-jpg/train_33277.jpg'),Path('planet/planet/train-jpg/train_11172.jpg'),Path('planet/planet/train-jpg/train_14671.jpg'),Path('planet/planet/train-jpg/train_29521.jpg'),Path('planet/planet/train-jpg/train_27535.jpg'),Path('planet/planet/train-jpg/train_13323.jpg')...]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">data <span class="op" style="color: #5E5E5E;">=</span> (path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'train_classes.csv'</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">df <span class="op" style="color: #5E5E5E;">=</span> pd.read_csv(data)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1">df.head()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>image_name</th>
+      <th>tags</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>train_0</td>
+      <td>haze primary</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>train_1</td>
+      <td>agriculture clear primary water</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>train_2</td>
+      <td>clear primary</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>train_3</td>
+      <td>clear primary</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>train_4</td>
+      <td>agriculture clear habitation primary road</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1">dblock <span class="op" style="color: #5E5E5E;">=</span> DataBlock()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">dsets <span class="op" style="color: #5E5E5E;">=</span> dblock.datasets(df)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1">dsets[<span class="dv" style="color: #AD0000;">0</span>]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<pre><code>(image_name         train_0
+ tags          haze primary
+ Name: 0, dtype: object,
+ image_name         train_0
+ tags          haze primary
+ Name: 0, dtype: object)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="kw" style="color: #003B4F;">def</span> get_x(r): <span class="cf" style="color: #003B4F;">return</span> path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'train-jpg'</span><span class="op" style="color: #5E5E5E;">/</span>(r[<span class="st" style="color: #20794D;">'image_name'</span>] <span class="op" style="color: #5E5E5E;">+</span> <span class="st" style="color: #20794D;">'.jpg'</span>)</span>
+<span id="cb17-2"><span class="kw" style="color: #003B4F;">def</span> get_y(r): <span class="cf" style="color: #003B4F;">return</span> r[<span class="st" style="color: #20794D;">'tags'</span>].split(<span class="st" style="color: #20794D;">' '</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1">dblock <span class="op" style="color: #5E5E5E;">=</span> DataBlock(get_x<span class="op" style="color: #5E5E5E;">=</span>get_x, get_y<span class="op" style="color: #5E5E5E;">=</span>get_y)</span>
+<span id="cb18-2">dsets <span class="op" style="color: #5E5E5E;">=</span> dblock.datasets(df)</span>
+<span id="cb18-3">dsets.train[<span class="dv" style="color: #AD0000;">0</span>]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<pre><code>(Path('planet/planet/train-jpg/train_1398.jpg'),
+ ['agriculture', 'partly_cloudy', 'primary', 'road'])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1">dblock <span class="op" style="color: #5E5E5E;">=</span> DataBlock(blocks <span class="op" style="color: #5E5E5E;">=</span> (ImageBlock, MultiCategoryBlock), </span>
+<span id="cb20-2">                   get_x<span class="op" style="color: #5E5E5E;">=</span>get_x, get_y<span class="op" style="color: #5E5E5E;">=</span>get_y)</span>
+<span id="cb20-3"></span>
+<span id="cb20-4">dsets <span class="op" style="color: #5E5E5E;">=</span> dblock.datasets(df)</span>
+<span id="cb20-5">dsets.train[<span class="dv" style="color: #AD0000;">0</span>]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<pre><code>(PILImage mode=RGB size=256x256,
+ TensorMultiCategory([1., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 1., 1., 0., 0., 0., 0.]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1">dblock <span class="op" style="color: #5E5E5E;">=</span> DataBlock(blocks <span class="op" style="color: #5E5E5E;">=</span> (ImageBlock, MultiCategoryBlock), </span>
+<span id="cb22-2">                   splitter<span class="op" style="color: #5E5E5E;">=</span>RandomSplitter(seed<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">42</span>),</span>
+<span id="cb22-3">                   get_x<span class="op" style="color: #5E5E5E;">=</span>get_x, get_y<span class="op" style="color: #5E5E5E;">=</span>get_y)</span>
+<span id="cb22-4"></span>
+<span id="cb22-5">dsets <span class="op" style="color: #5E5E5E;">=</span> dblock.datasets(df)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="bu" style="color: null;">len</span>(dsets.train), <span class="bu" style="color: null;">len</span>(dsets.valid)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="18">
+<pre><code>(32384, 8095)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1">dblock <span class="op" style="color: #5E5E5E;">=</span> DataBlock(blocks <span class="op" style="color: #5E5E5E;">=</span> (ImageBlock, MultiCategoryBlock), </span>
+<span id="cb25-2">                   splitter<span class="op" style="color: #5E5E5E;">=</span>RandomSplitter(seed<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">42</span>),</span>
+<span id="cb25-3">                   get_x<span class="op" style="color: #5E5E5E;">=</span>get_x, get_y<span class="op" style="color: #5E5E5E;">=</span>get_y,</span>
+<span id="cb25-4">                   item_tfms<span class="op" style="color: #5E5E5E;">=</span>RandomResizedCrop(<span class="dv" style="color: #AD0000;">128</span>, min_scale<span class="op" style="color: #5E5E5E;">=</span><span class="fl" style="color: #AD0000;">0.35</span>)</span>
+<span id="cb25-5">                  </span>
+<span id="cb25-6">)</span>
+<span id="cb25-7"></span>
+<span id="cb25-8">dls <span class="op" style="color: #5E5E5E;">=</span> dblock.dataloaders(df)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1">dls.show_batch()</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Amazon/amazon_files/figure-html/cell-21-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<section id="experiment-1" class="level1">
+<h1>Experiment 1</h1>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1">learn <span class="op" style="color: #5E5E5E;">=</span> vision_learner(dls, resnet18, metrics<span class="op" style="color: #5E5E5E;">=</span>accuracy_multi)</span>
+<span id="cb27-2">learn.fine_tune(<span class="dv" style="color: #AD0000;">6</span>, freeze_epochs<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">2</span>)</span>
+<span id="cb27-3">learn.recorder.plot_loss()</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/usr/local/lib/python3.9/dist-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and will be removed in 0.15, please use 'weights' instead.
+  warnings.warn(
+/usr/local/lib/python3.9/dist-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and will be removed in 0.15. The current behavior is equivalent to passing `weights=ResNet18_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet18_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+Downloading: "https://download.pytorch.org/models/resnet18-f37072fd.pth" to /root/.cache/torch/hub/checkpoints/resnet18-f37072fd.pth</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"e34f27f2cd9d4a99b3d97cf3521daafb","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>accuracy_multi</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.242502</td>
+      <td>0.150174</td>
+      <td>0.945827</td>
+      <td>00:25</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.147816</td>
+      <td>0.126972</td>
+      <td>0.951968</td>
+      <td>00:20</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>accuracy_multi</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.127971</td>
+      <td>0.109930</td>
+      <td>0.957991</td>
+      <td>00:23</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.119986</td>
+      <td>0.104264</td>
+      <td>0.960476</td>
+      <td>00:23</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.109712</td>
+      <td>0.098336</td>
+      <td>0.962301</td>
+      <td>00:38</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0.104570</td>
+      <td>0.097734</td>
+      <td>0.962555</td>
+      <td>00:49</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="experiment-2" class="level1">
+<h1>Experiment 2</h1>
+<div class="cell" data-execution_count="277">
+<div class="sourceCode cell-code" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1">learn2 <span class="op" style="color: #5E5E5E;">=</span> vision_learner(dls, resnet34, metrics<span class="op" style="color: #5E5E5E;">=</span>accuracy_multi)</span>
+<span id="cb29-2">learn2.fine_tune(<span class="dv" style="color: #AD0000;">6</span>, freeze_epochs<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">2</span>)</span>
+<span id="cb29-3">learn2.recorder.plot_loss()</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>accuracy_multi</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.244604</td>
+      <td>0.147677</td>
+      <td>0.947447</td>
+      <td>00:51</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.148016</td>
+      <td>0.123402</td>
+      <td>0.953312</td>
+      <td>00:25</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>accuracy_multi</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.123248</td>
+      <td>0.106454</td>
+      <td>0.959452</td>
+      <td>00:59</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.118266</td>
+      <td>0.104211</td>
+      <td>0.960942</td>
+      <td>00:34</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.111732</td>
+      <td>0.098766</td>
+      <td>0.962381</td>
+      <td>00:42</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0.105815</td>
+      <td>0.096162</td>
+      <td>0.963245</td>
+      <td>00:34</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.099851</td>
+      <td>0.094583</td>
+      <td>0.964037</td>
+      <td>00:34</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0.093574</td>
+      <td>0.095035</td>
+      <td>0.963848</td>
+      <td>00:34</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Amazon/amazon_files/figure-html/cell-23-output-5.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="experiment-3" class="level1">
+<h1>Experiment 3</h1>
+<div class="cell" data-execution_count="270">
+<div class="sourceCode cell-code" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1">learn3 <span class="op" style="color: #5E5E5E;">=</span> vision_learner(dls, resnet34, metrics<span class="op" style="color: #5E5E5E;">=</span>partial(accuracy_multi, thresh<span class="op" style="color: #5E5E5E;">=</span><span class="fl" style="color: #AD0000;">0.2</span>))</span>
+<span id="cb30-2">learn3.fine_tune(<span class="dv" style="color: #AD0000;">6</span>, freeze_epochs<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">2</span>)</span>
+<span id="cb30-3">learn3.recorder.plot_loss()</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>accuracy_multi</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.240184</td>
+      <td>0.151341</td>
+      <td>0.934862</td>
+      <td>00:38</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.151022</td>
+      <td>0.122403</td>
+      <td>0.939382</td>
+      <td>00:27</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>accuracy_multi</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.124375</td>
+      <td>0.106883</td>
+      <td>0.950107</td>
+      <td>00:35</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.118021</td>
+      <td>0.101975</td>
+      <td>0.951757</td>
+      <td>00:34</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.109789</td>
+      <td>0.099863</td>
+      <td>0.952055</td>
+      <td>00:34</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0.104578</td>
+      <td>0.096811</td>
+      <td>0.951851</td>
+      <td>00:34</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.095859</td>
+      <td>0.095459</td>
+      <td>0.953784</td>
+      <td>00:34</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0.092178</td>
+      <td>0.095330</td>
+      <td>0.954445</td>
+      <td>01:02</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Amazon/amazon_files/figure-html/cell-24-output-5.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="experiment-4" class="level1">
+<h1>Experiment 4</h1>
+<div class="cell" data-execution_count="275">
+<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1">learn4 <span class="op" style="color: #5E5E5E;">=</span> vision_learner(dls, resnet34, metrics<span class="op" style="color: #5E5E5E;">=</span>partial(accuracy_multi, thresh<span class="op" style="color: #5E5E5E;">=</span><span class="fl" style="color: #AD0000;">0.7</span>))</span>
+<span id="cb31-2">learn4.fine_tune(<span class="dv" style="color: #AD0000;">6</span>, freeze_epochs<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">2</span>)</span>
+<span id="cb31-3">learn4.recorder.plot_loss()</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>accuracy_multi</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.248779</td>
+      <td>0.148406</td>
+      <td>0.942892</td>
+      <td>00:52</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.147272</td>
+      <td>0.123920</td>
+      <td>0.950325</td>
+      <td>00:37</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>accuracy_multi</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.125626</td>
+      <td>0.109230</td>
+      <td>0.955863</td>
+      <td>00:48</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.118446</td>
+      <td>0.103957</td>
+      <td>0.956015</td>
+      <td>00:34</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.112594</td>
+      <td>0.099723</td>
+      <td>0.958754</td>
+      <td>00:37</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0.106374</td>
+      <td>0.096328</td>
+      <td>0.958689</td>
+      <td>00:51</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.099089</td>
+      <td>0.094283</td>
+      <td>0.960499</td>
+      <td>00:34</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0.095276</td>
+      <td>0.094695</td>
+      <td>0.961879</td>
+      <td>00:39</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Amazon/amazon_files/figure-html/cell-25-output-5.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="278">
+<div class="sourceCode cell-code" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1">test_dl <span class="op" style="color: #5E5E5E;">=</span> learn2.dls.test_dl(get_image_files(path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'test-jpg'</span>))</span>
+<span id="cb32-2">test_dl.show_batch()</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Amazon/amazon_files/figure-html/cell-26-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="279">
+<div class="sourceCode cell-code" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1">preds, _ <span class="op" style="color: #5E5E5E;">=</span> learn2.get_preds(dl<span class="op" style="color: #5E5E5E;">=</span>test_dl)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+</div>
+</div>
+<div class="cell" data-execution_count="280">
+<div class="sourceCode cell-code" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1">thresh <span class="op" style="color: #5E5E5E;">=</span> <span class="fl" style="color: #AD0000;">0.5</span></span>
+<span id="cb34-2">labelled_preds <span class="op" style="color: #5E5E5E;">=</span> [<span class="st" style="color: #20794D;">' '</span>.join([learn2.dls.vocab[i] <span class="cf" style="color: #003B4F;">for</span> i,p <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">enumerate</span>(pred) <span class="cf" style="color: #003B4F;">if</span> p <span class="op" style="color: #5E5E5E;">&gt;</span> thresh]) <span class="cf" style="color: #003B4F;">for</span> pred <span class="kw" style="color: #003B4F;">in</span> preds]</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="281">
+<div class="sourceCode cell-code" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1">labelled_preds[:<span class="dv" style="color: #AD0000;">5</span>]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="281">
+<pre><code>['agriculture clear primary road',
+ 'bare_ground clear',
+ 'clear primary',
+ 'clear primary',
+ 'clear primary']</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="282">
+<div class="sourceCode cell-code" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1">fnames <span class="op" style="color: #5E5E5E;">=</span> []</span>
+<span id="cb37-2"></span>
+<span id="cb37-3"><span class="cf" style="color: #003B4F;">for</span> name <span class="kw" style="color: #003B4F;">in</span> os.listdir((path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'test-jpg'</span>)):</span>
+<span id="cb37-4">    fnames.append(name)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="283">
+<div class="sourceCode cell-code" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1">fnames[<span class="dv" style="color: #AD0000;">0</span>:<span class="dv" style="color: #AD0000;">5</span>]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="283">
+<pre><code>['test_36099.jpg',
+ 'test_27503.jpg',
+ 'test_15453.jpg',
+ 'test_20695.jpg',
+ 'test_5439.jpg']</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="284">
+<div class="sourceCode cell-code" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1">learn2.predict((path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'test-jpg'</span><span class="op" style="color: #5E5E5E;">/</span>(fnames[<span class="dv" style="color: #AD0000;">0</span>])))</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+</div>
+<div class="cell-output cell-output-display" data-execution_count="284">
+<pre><code>((#4) ['agriculture','clear','primary','road'],
+ TensorBase([ True, False, False, False, False,  True, False, False, False, False, False, False,  True,  True, False, False, False]),
+ TensorBase([9.0538e-01, 3.7246e-04, 4.8710e-02, 5.2741e-04, 2.3139e-04, 9.9834e-01, 1.1549e-05, 2.1592e-04, 2.8083e-01, 2.6772e-01, 1.3102e-03, 5.9414e-04, 9.9820e-01, 7.1026e-01, 3.3888e-03,
+             1.9953e-02, 1.1821e-01]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="285">
+<div class="sourceCode cell-code" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1">sample <span class="op" style="color: #5E5E5E;">=</span> pd.read_csv(path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'sample_submission.csv'</span>)</span>
+<span id="cb42-2">sample</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="285">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>image_name</th>
+      <th>tags</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>test_0</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>test_1</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>test_2</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>test_3</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>test_4</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>61186</th>
+      <td>file_9995</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+    <tr>
+      <th>61187</th>
+      <td>file_9996</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+    <tr>
+      <th>61188</th>
+      <td>file_9997</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+    <tr>
+      <th>61189</th>
+      <td>file_9998</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+    <tr>
+      <th>61190</th>
+      <td>file_9999</td>
+      <td>primary clear agriculture road water</td>
+    </tr>
+  </tbody>
+</table>
+<p>61191 rows × 2 columns</p>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="286">
+<div class="sourceCode cell-code" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1">df <span class="op" style="color: #5E5E5E;">=</span> pd.DataFrame({<span class="st" style="color: #20794D;">'image_name'</span>:fnames, <span class="st" style="color: #20794D;">'tags'</span>:labelled_preds}, columns<span class="op" style="color: #5E5E5E;">=</span>[<span class="st" style="color: #20794D;">'image_name'</span>, <span class="st" style="color: #20794D;">'tags'</span>])</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="287">
+<div class="sourceCode cell-code" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1">df</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="287">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>image_name</th>
+      <th>tags</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>test_36099.jpg</td>
+      <td>agriculture clear primary road</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>test_27503.jpg</td>
+      <td>bare_ground clear</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>test_15453.jpg</td>
+      <td>clear primary</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>test_20695.jpg</td>
+      <td>clear primary</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>test_5439.jpg</td>
+      <td>clear primary</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>40664</th>
+      <td>test_12322.jpg</td>
+      <td>clear primary water</td>
+    </tr>
+    <tr>
+      <th>40665</th>
+      <td>test_10596.jpg</td>
+      <td>agriculture partly_cloudy primary road</td>
+    </tr>
+    <tr>
+      <th>40666</th>
+      <td>test_567.jpg</td>
+      <td>partly_cloudy primary</td>
+    </tr>
+    <tr>
+      <th>40667</th>
+      <td>test_23428.jpg</td>
+      <td>agriculture clear primary</td>
+    </tr>
+    <tr>
+      <th>40668</th>
+      <td>test_10099.jpg</td>
+      <td>clear primary</td>
+    </tr>
+  </tbody>
+</table>
+<p>40669 rows × 2 columns</p>
+</div>
+</div>
+</div>
+
+
+</section>
+
+ ]]></description>
+  <category>Python</category>
+  <category>Deep Learning</category>
+  <category>Computer Vision</category>
+  <guid>https://jakegehri.github.io/projects/Amazon/amazon.html</guid>
+  <pubDate>Wed, 19 Oct 2022 04:00:00 GMT</pubDate>
+  <media:content url="https://jakegehri.github.io/projects/Amazon/amazon.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>Trail Cam Deer, Elk and Moose Classifier</title>
+  <dc:creator>Jake Gehri</dc:creator>
+  <link>https://jakegehri.github.io/projects/Trailcam/trailcam_model.html</link>
+  <description><![CDATA[ 
+
+
+
+<div class="cell" data-tags="[]" data-execution_count="191">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;">import</span> fastbook</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;">from</span> fastbook <span class="im" style="color: #00769E;">import</span> <span class="op" style="color: #5E5E5E;">*</span></span>
+<span id="cb1-3"><span class="im" style="color: #00769E;">from</span> fastai.vision.<span class="bu" style="color: null;">all</span> <span class="im" style="color: #00769E;">import</span> <span class="op" style="color: #5E5E5E;">*</span></span>
+<span id="cb1-4"><span class="im" style="color: #00769E;">from</span> fastai.vision.widgets <span class="im" style="color: #00769E;">import</span> <span class="op" style="color: #5E5E5E;">*</span></span>
+<span id="cb1-5"><span class="im" style="color: #00769E;">import</span> timm</span>
+<span id="cb1-6"><span class="im" style="color: #00769E;">from</span> duckduckgo_search <span class="im" style="color: #00769E;">import</span> ddg_images</span>
+<span id="cb1-7"><span class="im" style="color: #00769E;">from</span> time <span class="im" style="color: #00769E;">import</span> sleep</span>
+<span id="cb1-8"><span class="im" style="color: #00769E;">import</span> os</span>
+<span id="cb1-9"><span class="im" style="color: #00769E;">import</span> gradio</span></code></pre></div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="131">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="kw" style="color: #003B4F;">def</span> search_images(term, max_images<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">100</span>):</span>
+<span id="cb2-2">    <span class="bu" style="color: null;">print</span>(<span class="ss" style="color: #20794D;">f"Searching for '</span><span class="sc" style="color: #5E5E5E;">{</span>term<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;">'"</span>)</span>
+<span id="cb2-3">    <span class="cf" style="color: #003B4F;">return</span> L(ddg_images(term, max_results<span class="op" style="color: #5E5E5E;">=</span>max_images)).itemgot(<span class="st" style="color: #20794D;">'image'</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="132">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">searches <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'moose'</span>, <span class="st" style="color: #20794D;">'deer'</span>, <span class="st" style="color: #20794D;">'elk'</span></span>
+<span id="cb3-2">path <span class="op" style="color: #5E5E5E;">=</span> Path(<span class="st" style="color: #20794D;">'trail_cam'</span>)</span>
+<span id="cb3-3"></span>
+<span id="cb3-4"><span class="cf" style="color: #003B4F;">for</span> o <span class="kw" style="color: #003B4F;">in</span> searches:</span>
+<span id="cb3-5">    dest <span class="op" style="color: #5E5E5E;">=</span> (path<span class="op" style="color: #5E5E5E;">/</span>o)</span>
+<span id="cb3-6">    dest.mkdir(exist_ok<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, parents<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>)</span>
+<span id="cb3-7">    download_images(dest, urls <span class="op" style="color: #5E5E5E;">=</span> search_images(<span class="ss" style="color: #20794D;">f'</span><span class="sc" style="color: #5E5E5E;">{</span>o<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;"> trail cam photo'</span>))</span>
+<span id="cb3-8">    sleep(<span class="dv" style="color: #AD0000;">10</span>)</span>
+<span id="cb3-9">    download_images(dest, urls <span class="op" style="color: #5E5E5E;">=</span> search_images(<span class="ss" style="color: #20794D;">f'</span><span class="sc" style="color: #5E5E5E;">{</span>o<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;"> trail cam photo day'</span>))</span>
+<span id="cb3-10">    sleep(<span class="dv" style="color: #AD0000;">10</span>)</span>
+<span id="cb3-11">    download_images(dest, urls <span class="op" style="color: #5E5E5E;">=</span> search_images(<span class="ss" style="color: #20794D;">f'</span><span class="sc" style="color: #5E5E5E;">{</span>o<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;"> trail cam photo night'</span>))</span>
+<span id="cb3-12">    sleep(<span class="dv" style="color: #AD0000;">10</span>)</span>
+<span id="cb3-13">    resize_images(path<span class="op" style="color: #5E5E5E;">/</span>o, max_size<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">400</span>, dest<span class="op" style="color: #5E5E5E;">=</span>path<span class="op" style="color: #5E5E5E;">/</span>o)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Searching for 'moose trail cam photo'
+Searching for 'moose trail cam photo day'
+Searching for 'moose trail cam photo night'
+Searching for 'deer trail cam photo'
+Searching for 'deer trail cam photo day'
+Searching for 'deer trail cam photo night'
+Searching for 'elk trail cam photo'
+Searching for 'elk trail cam photo day'
+Searching for 'elk trail cam photo night'</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="133">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">fns <span class="op" style="color: #5E5E5E;">=</span> get_image_files(path)</span>
+<span id="cb5-2"><span class="bu" style="color: null;">len</span>(fns)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="133">
+<pre><code>877</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="134">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">failed <span class="op" style="color: #5E5E5E;">=</span> verify_images(fns)</span>
+<span id="cb7-2">failed.<span class="bu" style="color: null;">map</span>(Path.unlink)</span>
+<span id="cb7-3">fns <span class="op" style="color: #5E5E5E;">=</span> get_image_files(path)</span>
+<span id="cb7-4"><span class="bu" style="color: null;">len</span>(failed), <span class="bu" style="color: null;">len</span>(fns)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="134">
+<pre><code>(12, 865)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="164">
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1">os.getcwd()</span>
+<span id="cb9-2"><span class="cf" style="color: #003B4F;">for</span> i, filename <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">enumerate</span>(os.listdir(path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'deer'</span>)):</span>
+<span id="cb9-3">   os.rename(<span class="st" style="color: #20794D;">"trail_cam/deer/"</span> <span class="op" style="color: #5E5E5E;">+</span> filename, <span class="st" style="color: #20794D;">"trail_cam/deer/deer_"</span> <span class="op" style="color: #5E5E5E;">+</span> <span class="bu" style="color: null;">str</span>(i) <span class="op" style="color: #5E5E5E;">+</span> <span class="st" style="color: #20794D;">".jpg"</span>)</span>
+<span id="cb9-4"><span class="cf" style="color: #003B4F;">for</span> i, filename <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">enumerate</span>(os.listdir(path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'moose'</span>)):</span>
+<span id="cb9-5">   os.rename(<span class="st" style="color: #20794D;">"trail_cam/moose/"</span> <span class="op" style="color: #5E5E5E;">+</span> filename, <span class="st" style="color: #20794D;">"trail_cam/moose/moose_"</span> <span class="op" style="color: #5E5E5E;">+</span> <span class="bu" style="color: null;">str</span>(i) <span class="op" style="color: #5E5E5E;">+</span> <span class="st" style="color: #20794D;">".jpg"</span>)</span>
+<span id="cb9-6"><span class="cf" style="color: #003B4F;">for</span> i, filename <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">enumerate</span>(os.listdir(path<span class="op" style="color: #5E5E5E;">/</span><span class="st" style="color: #20794D;">'elk'</span>)):</span>
+<span id="cb9-7">   os.rename(<span class="st" style="color: #20794D;">"trail_cam/elk/"</span> <span class="op" style="color: #5E5E5E;">+</span> filename, <span class="st" style="color: #20794D;">"trail_cam/elk/elk_"</span> <span class="op" style="color: #5E5E5E;">+</span> <span class="bu" style="color: null;">str</span>(i) <span class="op" style="color: #5E5E5E;">+</span> <span class="st" style="color: #20794D;">".jpg"</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="165">
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">dls <span class="op" style="color: #5E5E5E;">=</span> ImageDataLoaders.from_name_func(<span class="st" style="color: #20794D;">'.'</span>,</span>
+<span id="cb10-2">    get_image_files(path), valid_pct<span class="op" style="color: #5E5E5E;">=</span><span class="fl" style="color: #AD0000;">0.2</span>, seed<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">42</span>,</span>
+<span id="cb10-3">    label_func<span class="op" style="color: #5E5E5E;">=</span>RegexLabeller(pat <span class="op" style="color: #5E5E5E;">=</span> <span class="vs" style="color: #20794D;">r'^([^/]+)_\d+'</span>),</span>
+<span id="cb10-4">    item_tfms<span class="op" style="color: #5E5E5E;">=</span>Resize(<span class="dv" style="color: #AD0000;">224</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="166">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">dls.valid.show_batch(max_n<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">4</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Trailcam/trailcam_model_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="167">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1">learn <span class="op" style="color: #5E5E5E;">=</span> vision_learner(dls, resnet34, metrics<span class="op" style="color: #5E5E5E;">=</span>error_rate)</span>
+<span id="cb12-2">learn.fine_tune(<span class="dv" style="color: #AD0000;">5</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>error_rate</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>2.002779</td>
+      <td>1.369467</td>
+      <td>0.586207</td>
+      <td>00:07</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>error_rate</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>1.426437</td>
+      <td>1.002604</td>
+      <td>0.425287</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>1.082575</td>
+      <td>0.859882</td>
+      <td>0.413793</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.907559</td>
+      <td>0.716293</td>
+      <td>0.333333</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0.748531</td>
+      <td>0.688598</td>
+      <td>0.252874</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.647351</td>
+      <td>0.693779</td>
+      <td>0.264368</td>
+      <td>00:03</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="168">
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1">interp <span class="op" style="color: #5E5E5E;">=</span> ClassificationInterpretation.from_learner(learn)</span>
+<span id="cb13-2">interp.plot_confusion_matrix()</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+</div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Trailcam/trailcam_model_files/figure-html/cell-11-output-5.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="151">
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">interp.plot_top_losses(<span class="dv" style="color: #AD0000;">6</span>, nrows<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">1</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Trailcam/trailcam_model_files/figure-html/cell-12-output-3.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="169">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1">cleaner <span class="op" style="color: #5E5E5E;">=</span> ImageClassifierCleaner(learn)</span>
+<span id="cb15-2">cleaner</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+</div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1e2de8fc14094e59a7065d3d76c0ad63","version_major":2,"version_minor":0}
+</script>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="170">
+<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><span class="cf" style="color: #003B4F;">for</span> idx <span class="kw" style="color: #003B4F;">in</span> cleaner.delete(): cleaner.fns[idx].unlink()</span>
+<span id="cb16-2">    </span>
+<span id="cb16-3"><span class="cf" style="color: #003B4F;">for</span> idx,cat <span class="kw" style="color: #003B4F;">in</span> cleaner.change(): shutil.move(<span class="bu" style="color: null;">str</span>(cleaner.fns[idx]), path<span class="op" style="color: #5E5E5E;">/</span>cat)</span>
+<span id="cb16-4">    </span>
+<span id="cb16-5">dls <span class="op" style="color: #5E5E5E;">=</span> ImageDataLoaders.from_name_func(<span class="st" style="color: #20794D;">'.'</span>,</span>
+<span id="cb16-6">    get_image_files(path), valid_pct<span class="op" style="color: #5E5E5E;">=</span><span class="fl" style="color: #AD0000;">0.2</span>, seed<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">42</span>,</span>
+<span id="cb16-7">    label_func<span class="op" style="color: #5E5E5E;">=</span>RegexLabeller(pat <span class="op" style="color: #5E5E5E;">=</span> <span class="vs" style="color: #20794D;">r'^([^/]+)_\d+'</span>),</span>
+<span id="cb16-8">    item_tfms<span class="op" style="color: #5E5E5E;">=</span>Resize(<span class="dv" style="color: #AD0000;">224</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="171">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">learn <span class="op" style="color: #5E5E5E;">=</span> vision_learner(dls, <span class="st" style="color: #20794D;">'convnext_tiny_in22k'</span>, metrics<span class="op" style="color: #5E5E5E;">=</span>error_rate).to_fp16()</span>
+<span id="cb17-2">learn.fine_tune(<span class="dv" style="color: #AD0000;">10</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>error_rate</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>1.692869</td>
+      <td>3.532001</td>
+      <td>0.581395</td>
+      <td>00:03</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>epoch</th>
+      <th>train_loss</th>
+      <th>valid_loss</th>
+      <th>error_rate</th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.983810</td>
+      <td>1.380556</td>
+      <td>0.313953</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.885328</td>
+      <td>0.899624</td>
+      <td>0.232558</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.792400</td>
+      <td>0.785097</td>
+      <td>0.255814</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0.720126</td>
+      <td>0.789632</td>
+      <td>0.197674</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.623536</td>
+      <td>0.744941</td>
+      <td>0.186047</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0.556991</td>
+      <td>0.737408</td>
+      <td>0.209302</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>0.512330</td>
+      <td>0.754599</td>
+      <td>0.197674</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>0.464188</td>
+      <td>0.772003</td>
+      <td>0.197674</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>0.431808</td>
+      <td>0.771565</td>
+      <td>0.197674</td>
+      <td>00:03</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>0.404420</td>
+      <td>0.780129</td>
+      <td>0.197674</td>
+      <td>00:03</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="184">
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="im" style="color: #00769E;">from</span> fastdownload <span class="im" style="color: #00769E;">import</span> download_url</span>
+<span id="cb18-2">urls <span class="op" style="color: #5E5E5E;">=</span> search_images_ddg(<span class="st" style="color: #20794D;">'trail cam deer'</span>)</span>
+<span id="cb18-3">urls[<span class="dv" style="color: #AD0000;">0</span>]</span>
+<span id="cb18-4">download_url(urls[<span class="dv" style="color: #AD0000;">2</span>], <span class="st" style="color: #20794D;">'deer.jpg'</span>)</span>
+<span id="cb18-5"></span>
+<span id="cb18-6">im <span class="op" style="color: #5E5E5E;">=</span> Image.<span class="bu" style="color: null;">open</span>(<span class="st" style="color: #20794D;">'deer.jpg'</span>)</span>
+<span id="cb18-7">im.to_thumb(<span class="dv" style="color: #AD0000;">190</span>,<span class="dv" style="color: #AD0000;">190</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+    <div>
+      <progress value="196608" class="" max="195476" style="width:300px; height:20px; vertical-align: middle;"></progress>
+      100.58% [196608/195476 00:00&lt;00:00]
+    </div>
+    
+</div>
+<div class="cell-output cell-output-display" data-execution_count="184">
+<p><img src="https://jakegehri.github.io/projects/Trailcam/trailcam_model_files/figure-html/cell-16-output-3.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="174">
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1">urls <span class="op" style="color: #5E5E5E;">=</span> search_images_ddg(<span class="st" style="color: #20794D;">'trail cam elk'</span>)</span>
+<span id="cb19-2">urls[<span class="dv" style="color: #AD0000;">0</span>]</span>
+<span id="cb19-3">download_url(urls[<span class="dv" style="color: #AD0000;">0</span>], <span class="st" style="color: #20794D;">'elk.jpg'</span>)</span>
+<span id="cb19-4"></span>
+<span id="cb19-5">im <span class="op" style="color: #5E5E5E;">=</span> Image.<span class="bu" style="color: null;">open</span>(<span class="st" style="color: #20794D;">'elk.jpg'</span>)</span>
+<span id="cb19-6">im.to_thumb(<span class="dv" style="color: #AD0000;">190</span>,<span class="dv" style="color: #AD0000;">190</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+    <div>
+      <progress value="40960" class="" max="35192" style="width:300px; height:20px; vertical-align: middle;"></progress>
+      116.39% [40960/35192 00:00&lt;00:00]
+    </div>
+    
+</div>
+<div class="cell-output cell-output-display" data-execution_count="174">
+<p><img src="https://jakegehri.github.io/projects/Trailcam/trailcam_model_files/figure-html/cell-17-output-3.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="175">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1">urls <span class="op" style="color: #5E5E5E;">=</span> search_images_ddg(<span class="st" style="color: #20794D;">'trail cam moose'</span>)</span>
+<span id="cb20-2">urls[<span class="dv" style="color: #AD0000;">1</span>]</span>
+<span id="cb20-3">download_url(urls[<span class="dv" style="color: #AD0000;">1</span>], <span class="st" style="color: #20794D;">'moose.jpg'</span>)</span>
+<span id="cb20-4"></span>
+<span id="cb20-5">im <span class="op" style="color: #5E5E5E;">=</span> Image.<span class="bu" style="color: null;">open</span>(<span class="st" style="color: #20794D;">'moose.jpg'</span>)</span>
+<span id="cb20-6">im.to_thumb(<span class="dv" style="color: #AD0000;">190</span>,<span class="dv" style="color: #AD0000;">190</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+    <div>
+      <progress value="270336" class="" max="268163" style="width:300px; height:20px; vertical-align: middle;"></progress>
+      100.81% [270336/268163 00:00&lt;00:00]
+    </div>
+    
+</div>
+<div class="cell-output cell-output-display" data-execution_count="175">
+<p><img src="https://jakegehri.github.io/projects/Trailcam/trailcam_model_files/figure-html/cell-18-output-3.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="185">
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1">im <span class="op" style="color: #5E5E5E;">=</span> PILImage.create(<span class="st" style="color: #20794D;">"deer.jpg"</span>)</span>
+<span id="cb21-2">im.thumbnail((<span class="dv" style="color: #AD0000;">192</span>, <span class="dv" style="color: #AD0000;">192</span>))</span>
+<span id="cb21-3">im</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="185">
+<p><img src="https://jakegehri.github.io/projects/Trailcam/trailcam_model_files/figure-html/cell-19-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="186">
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1">learn.predict(im)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+
+<style>
+    /* Turns off some styling */
+    progress {
+        /* gets rid of default border in Firefox and Opera. */
+        border: none;
+        /* Needs to be in here for Safari polyfill so background images work as expected. */
+        background-size: auto;
+    }
+    progress:not([value]), progress:not([value])::-webkit-progress-bar {
+        background: repeating-linear-gradient(45deg, #7e7e7e, #7e7e7e 10px, #5c5c5c 10px, #5c5c5c 20px);
+    }
+    .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+        background: #F44336;
+    }
+</style>
+</div>
+<div class="cell-output cell-output-display">
+
+</div>
+<div class="cell-output cell-output-display" data-execution_count="186">
+<pre><code>('deer', TensorBase(0), TensorBase([0.6719, 0.0927, 0.2354]))</code></pre>
+</div>
+</div>
+<section id="pickel-and-export-model-to-be-uploaded-to-gradio" class="level1">
+<h1>Pickel and export model to be uploaded to gradio</h1>
+<div class="cell" data-execution_count="187">
+<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1">learn.export(<span class="st" style="color: #20794D;">'model.pkl'</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="192">
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><span class="im" style="color: #00769E;">from</span> fastai.vision.<span class="bu" style="color: null;">all</span> <span class="im" style="color: #00769E;">import</span> <span class="op" style="color: #5E5E5E;">*</span></span>
+<span id="cb25-2"><span class="im" style="color: #00769E;">import</span> gradio <span class="im" style="color: #00769E;">as</span> gr</span>
+<span id="cb25-3"></span>
+<span id="cb25-4">learn <span class="op" style="color: #5E5E5E;">=</span> load_learner(<span class="st" style="color: #20794D;">'model.pkl'</span>)</span>
+<span id="cb25-5">categories <span class="op" style="color: #5E5E5E;">=</span> learn.dls.vocab</span>
+<span id="cb25-6"></span>
+<span id="cb25-7"><span class="kw" style="color: #003B4F;">def</span> classify_image(img):</span>
+<span id="cb25-8">    img <span class="op" style="color: #5E5E5E;">=</span> PILImage.create(img)</span>
+<span id="cb25-9">    pred, idx, probs <span class="op" style="color: #5E5E5E;">=</span> learn.predict(img)</span>
+<span id="cb25-10">    <span class="cf" style="color: #003B4F;">return</span> <span class="bu" style="color: null;">dict</span>(<span class="bu" style="color: null;">zip</span>(categories, <span class="bu" style="color: null;">map</span>(<span class="bu" style="color: null;">float</span>,probs)))</span></code></pre></div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="193">
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1">image <span class="op" style="color: #5E5E5E;">=</span> gr.inputs.Image(shape<span class="op" style="color: #5E5E5E;">=</span>(<span class="dv" style="color: #AD0000;">192</span>,<span class="dv" style="color: #AD0000;">192</span>))</span>
+<span id="cb26-2">label <span class="op" style="color: #5E5E5E;">=</span> gr.outputs.Label()</span>
+<span id="cb26-3">examples <span class="op" style="color: #5E5E5E;">=</span> [<span class="st" style="color: #20794D;">'deer.jpg'</span>, <span class="st" style="color: #20794D;">'elk.jpg'</span>, <span class="st" style="color: #20794D;">'moose.jpg'</span>]</span>
+<span id="cb26-4"></span>
+<span id="cb26-5">intf <span class="op" style="color: #5E5E5E;">=</span> gr.Interface(fn<span class="op" style="color: #5E5E5E;">=</span>classify_image, inputs<span class="op" style="color: #5E5E5E;">=</span>image, outputs<span class="op" style="color: #5E5E5E;">=</span>label, examples<span class="op" style="color: #5E5E5E;">=</span>examples)</span>
+<span id="cb26-6">intf.launch(inline<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">False</span>, share<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/usr/local/lib/python3.9/dist-packages/gradio/inputs.py:256: UserWarning: Usage of gradio.inputs is deprecated, and will not be supported in the future, please import your component from gradio.components
+  warnings.warn(
+/usr/local/lib/python3.9/dist-packages/gradio/deprecation.py:40: UserWarning: `optional` parameter is deprecated, and it has no effect
+  warnings.warn(value)
+/usr/local/lib/python3.9/dist-packages/gradio/outputs.py:196: UserWarning: Usage of gradio.outputs is deprecated, and will not be supported in the future, please import your components from gradio.components
+  warnings.warn(
+/usr/local/lib/python3.9/dist-packages/gradio/deprecation.py:40: UserWarning: The 'type' parameter has been deprecated. Use the Number component instead.
+  warnings.warn(value)</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Running on local URL:  http://127.0.0.1:7860
+Running on public URL: https://27270.gradio.app
+
+This share link expires in 72 hours. For free permanent hosting, check out Spaces: https://huggingface.co/spaces</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="193">
+<pre><code>(&lt;gradio.routes.App at 0x7f8110cc3040&gt;,
+ 'http://127.0.0.1:7860/',
+ 'https://27270.gradio.app')</code></pre>
+</div>
+</div>
+
+
+</section>
+
+ ]]></description>
+  <category>Python</category>
+  <category>Deep Learning</category>
+  <category>Computer Vision</category>
+  <guid>https://jakegehri.github.io/projects/Trailcam/trailcam_model.html</guid>
+  <pubDate>Wed, 12 Oct 2022 04:00:00 GMT</pubDate>
+  <media:content url="https://jakegehri.github.io/projects/Trailcam/trail_cam_project.jpeg" medium="image" type="image/jpeg"/>
+</item>
+</channel>
+</rss>

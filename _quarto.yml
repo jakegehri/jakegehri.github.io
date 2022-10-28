@@ -1,8 +1,11 @@
 project:
   type: website
+  resources:
+    - Jake Gehri CV v_22.10.19.pdf
 
 website:
   title: "Jake Gehri"
+  site-url: https://jakegehri.github.io
   navbar:
     background: primary
     search: true
@@ -14,9 +17,6 @@ website:
 
 format:
   html:
-    theme: cosmo
+    theme: sketchy
     css: styles.css
     toc: true
-
-
-
