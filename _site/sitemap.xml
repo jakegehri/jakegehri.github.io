@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://jakegehri.github.io/projects/Amazon/amazon.html</loc>
+    <lastmod>2022-10-28T02:42:27.656Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jakegehri.github.io/projects/Trailcam/trailcam_model.html</loc>
+    <lastmod>2022-10-28T02:42:28.099Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jakegehri.github.io/projects.html</loc>
+    <lastmod>2022-10-28T02:47:03.378Z</lastmod>
+  </url>
+  <url>
     <loc>https://jakegehri.github.io/index.html</loc>
-    <lastmod>2022-10-28T02:41:51.756Z</lastmod>
+    <lastmod>2022-10-28T02:47:04.633Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jakegehri.github.io/blog.html</loc>
+    <lastmod>2022-10-28T02:47:03.702Z</lastmod>
   </url>
 </urlset>

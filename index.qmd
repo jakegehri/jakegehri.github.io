@@ -14,8 +14,6 @@ about:
       url: "https://github.com/jakegehri"
     - text: Email
       url: "mailto:jakegehri@outlook.com"
-    - text: Blog
-      url: "blog.qmd"
     - text: CV
       url: "Jake Gehri CV v_22.10.19.pdf"
 comments: false
