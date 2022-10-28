@@ -1,13 +1,13 @@
 [
   {
-    "listing": "/blog.html",
-    "items": []
-  },
-  {
     "listing": "/projects.html",
     "items": [
       "/projects/Amazon/amazon.html",
       "/projects/Trailcam/trailcam_model.html"
     ]
+  },
+  {
+    "listing": "/blog.html",
+    "items": []
   }
 ]
