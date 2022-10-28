@@ -1,0 +1,36 @@
+---
+title: "Jake Gehri"
+image: me.jpg
+about:
+  template: trestles
+  links:
+    - text: LinkedIn
+      url: "https://www.linkedin.com/in/jake-gehri-209379174/"
+    - text: Twitter
+      icon: twitter
+      url: "https://twitter.com/gehrijake"
+    - text: GitHub
+      icon: github
+      url: "https://github.com/jakegehri"
+    - text: Email
+      url: "mailto:jakegehri@outlook.com"
+    - text: Blog
+      url: "blog.qmd"
+    - text: CV
+      url: "cv.pdf"
+comments: false
+---
+::: {.column-page}
+
+## Bio
+
+
+## Education
+
+
+## Experience
+
+
+## Selected Projects
+
+:::
