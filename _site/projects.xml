@@ -10,7 +10,723 @@
 <atom:link href="https://jakegehri.github.io/projects.xml" rel="self" type="application/rss+xml"/>
 <description></description>
 <generator>quarto-1.2.242</generator>
-<lastBuildDate>Wed, 19 Oct 2022 04:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 01 Nov 2022 04:00:00 GMT</lastBuildDate>
+<item>
+  <title>DNN From Scratch: The nuts and bolts</title>
+  <dc:creator>Jake Gehri</dc:creator>
+  <link>https://jakegehri.github.io/projects/DNN From Scratch/no_hands.html</link>
+  <description><![CDATA[ 
+
+
+
+<div class="cell" data-execution_count="140">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;">import</span> torch</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;">import</span> pandas <span class="im" style="color: #00769E;">as</span> pd</span>
+<span id="cb1-3"><span class="im" style="color: #00769E;">import</span> numpy <span class="im" style="color: #00769E;">as</span> np</span>
+<span id="cb1-4"><span class="im" style="color: #00769E;">import</span> torch.nn.functional <span class="im" style="color: #00769E;">as</span> F</span>
+<span id="cb1-5"><span class="im" style="color: #00769E;">from</span> fastai <span class="im" style="color: #00769E;">import</span> <span class="op" style="color: #5E5E5E;">*</span></span>
+<span id="cb1-6"><span class="im" style="color: #00769E;">from</span> fastbook <span class="im" style="color: #00769E;">import</span> <span class="op" style="color: #5E5E5E;">*</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">data <span class="op" style="color: #5E5E5E;">=</span> pd.read_csv(<span class="st" style="color: #20794D;">'train.csv'</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">data.head()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="43">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>PassengerId</th>
+      <th>Survived</th>
+      <th>Pclass</th>
+      <th>Name</th>
+      <th>Sex</th>
+      <th>Age</th>
+      <th>SibSp</th>
+      <th>Parch</th>
+      <th>Ticket</th>
+      <th>Fare</th>
+      <th>Cabin</th>
+      <th>Embarked</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+      <td>Braund, Mr. Owen Harris</td>
+      <td>male</td>
+      <td>22.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>A/5 21171</td>
+      <td>7.2500</td>
+      <td>NaN</td>
+      <td>S</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>Cumings, Mrs. John Bradley (Florence Briggs Th...</td>
+      <td>female</td>
+      <td>38.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>PC 17599</td>
+      <td>71.2833</td>
+      <td>C85</td>
+      <td>C</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>Heikkinen, Miss. Laina</td>
+      <td>female</td>
+      <td>26.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>STON/O2. 3101282</td>
+      <td>7.9250</td>
+      <td>NaN</td>
+      <td>S</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+      <td>Futrelle, Mrs. Jacques Heath (Lily May Peel)</td>
+      <td>female</td>
+      <td>35.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>113803</td>
+      <td>53.1000</td>
+      <td>C123</td>
+      <td>S</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>5</td>
+      <td>0</td>
+      <td>3</td>
+      <td>Allen, Mr. William Henry</td>
+      <td>male</td>
+      <td>35.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>373450</td>
+      <td>8.0500</td>
+      <td>NaN</td>
+      <td>S</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">data.isna().<span class="bu" style="color: null;">sum</span>()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="44">
+<pre><code>PassengerId      0
+Survived         0
+Pclass           0
+Name             0
+Sex              0
+Age            177
+SibSp            0
+Parch            0
+Ticket           0
+Fare             0
+Cabin          687
+Embarked         2
+dtype: int64</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="45">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">modes <span class="op" style="color: #5E5E5E;">=</span> data.mode().iloc[<span class="dv" style="color: #AD0000;">0</span>]</span>
+<span id="cb6-2">modes</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="45">
+<pre><code>PassengerId                      1
+Survived                       0.0
+Pclass                         3.0
+Name           Abbing, Mr. Anthony
+Sex                           male
+Age                           24.0
+SibSp                          0.0
+Parch                          0.0
+Ticket                        1601
+Fare                          8.05
+Cabin                      B96 B98
+Embarked                         S
+Name: 0, dtype: object</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="46">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">data.fillna(modes, inplace<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="47">
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1">data.isna().<span class="bu" style="color: null;">sum</span>()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="47">
+<pre><code>PassengerId    0
+Survived       0
+Pclass         0
+Name           0
+Sex            0
+Age            0
+SibSp          0
+Parch          0
+Ticket         0
+Fare           0
+Cabin          0
+Embarked       0
+dtype: int64</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="48">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">data.describe(include<span class="op" style="color: #5E5E5E;">=</span>(np.number))</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="48">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>PassengerId</th>
+      <th>Survived</th>
+      <th>Pclass</th>
+      <th>Age</th>
+      <th>SibSp</th>
+      <th>Parch</th>
+      <th>Fare</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>891.000000</td>
+      <td>891.000000</td>
+      <td>891.000000</td>
+      <td>891.000000</td>
+      <td>891.000000</td>
+      <td>891.000000</td>
+      <td>891.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>446.000000</td>
+      <td>0.383838</td>
+      <td>2.308642</td>
+      <td>28.566970</td>
+      <td>0.523008</td>
+      <td>0.381594</td>
+      <td>32.204208</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>257.353842</td>
+      <td>0.486592</td>
+      <td>0.836071</td>
+      <td>13.199572</td>
+      <td>1.102743</td>
+      <td>0.806057</td>
+      <td>49.693429</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>1.000000</td>
+      <td>0.420000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>223.500000</td>
+      <td>0.000000</td>
+      <td>2.000000</td>
+      <td>22.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>7.910400</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>446.000000</td>
+      <td>0.000000</td>
+      <td>3.000000</td>
+      <td>24.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>14.454200</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>668.500000</td>
+      <td>1.000000</td>
+      <td>3.000000</td>
+      <td>35.000000</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>31.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>891.000000</td>
+      <td>1.000000</td>
+      <td>3.000000</td>
+      <td>80.000000</td>
+      <td>8.000000</td>
+      <td>6.000000</td>
+      <td>512.329200</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1">data.describe(include<span class="op" style="color: #5E5E5E;">=</span><span class="bu" style="color: null;">object</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="49">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Name</th>
+      <th>Sex</th>
+      <th>Ticket</th>
+      <th>Cabin</th>
+      <th>Embarked</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>891</td>
+      <td>891</td>
+      <td>891</td>
+      <td>891</td>
+      <td>891</td>
+    </tr>
+    <tr>
+      <th>unique</th>
+      <td>891</td>
+      <td>2</td>
+      <td>681</td>
+      <td>147</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>top</th>
+      <td>Braund, Mr. Owen Harris</td>
+      <td>male</td>
+      <td>347082</td>
+      <td>B96 B98</td>
+      <td>S</td>
+    </tr>
+    <tr>
+      <th>freq</th>
+      <td>1</td>
+      <td>577</td>
+      <td>7</td>
+      <td>691</td>
+      <td>646</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1">data[<span class="st" style="color: #20794D;">'Fare'</span>].hist()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="50">
+<pre><code>&lt;AxesSubplot:&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/DNN From Scratch/no_hands_files/figure-html/cell-11-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="51">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1">data[<span class="st" style="color: #20794D;">'LogFare'</span>] <span class="op" style="color: #5E5E5E;">=</span> np.log(data[<span class="st" style="color: #20794D;">'Fare'</span>] <span class="op" style="color: #5E5E5E;">+</span> <span class="dv" style="color: #AD0000;">1</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="52">
+<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1">data.head()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="52">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>PassengerId</th>
+      <th>Survived</th>
+      <th>Pclass</th>
+      <th>Name</th>
+      <th>Sex</th>
+      <th>Age</th>
+      <th>SibSp</th>
+      <th>Parch</th>
+      <th>Ticket</th>
+      <th>Fare</th>
+      <th>Cabin</th>
+      <th>Embarked</th>
+      <th>LogFare</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+      <td>Braund, Mr. Owen Harris</td>
+      <td>male</td>
+      <td>22.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>A/5 21171</td>
+      <td>7.2500</td>
+      <td>B96 B98</td>
+      <td>S</td>
+      <td>2.110213</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>Cumings, Mrs. John Bradley (Florence Briggs Th...</td>
+      <td>female</td>
+      <td>38.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>PC 17599</td>
+      <td>71.2833</td>
+      <td>C85</td>
+      <td>C</td>
+      <td>4.280593</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>Heikkinen, Miss. Laina</td>
+      <td>female</td>
+      <td>26.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>STON/O2. 3101282</td>
+      <td>7.9250</td>
+      <td>B96 B98</td>
+      <td>S</td>
+      <td>2.188856</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+      <td>Futrelle, Mrs. Jacques Heath (Lily May Peel)</td>
+      <td>female</td>
+      <td>35.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>113803</td>
+      <td>53.1000</td>
+      <td>C123</td>
+      <td>S</td>
+      <td>3.990834</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>5</td>
+      <td>0</td>
+      <td>3</td>
+      <td>Allen, Mr. William Henry</td>
+      <td>male</td>
+      <td>35.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>373450</td>
+      <td>8.0500</td>
+      <td>B96 B98</td>
+      <td>S</td>
+      <td>2.202765</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">data <span class="op" style="color: #5E5E5E;">=</span> pd.get_dummies(data, columns <span class="op" style="color: #5E5E5E;">=</span> [<span class="st" style="color: #20794D;">'Pclass'</span>, <span class="st" style="color: #20794D;">'Sex'</span>, <span class="st" style="color: #20794D;">'Embarked'</span>])</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="54">
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1">data.head()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="54">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>PassengerId</th>
+      <th>Survived</th>
+      <th>Name</th>
+      <th>Age</th>
+      <th>SibSp</th>
+      <th>Parch</th>
+      <th>Ticket</th>
+      <th>Fare</th>
+      <th>Cabin</th>
+      <th>LogFare</th>
+      <th>Pclass_1</th>
+      <th>Pclass_2</th>
+      <th>Pclass_3</th>
+      <th>Sex_female</th>
+      <th>Sex_male</th>
+      <th>Embarked_C</th>
+      <th>Embarked_Q</th>
+      <th>Embarked_S</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>0</td>
+      <td>Braund, Mr. Owen Harris</td>
+      <td>22.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>A/5 21171</td>
+      <td>7.2500</td>
+      <td>B96 B98</td>
+      <td>2.110213</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>1</td>
+      <td>Cumings, Mrs. John Bradley (Florence Briggs Th...</td>
+      <td>38.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>PC 17599</td>
+      <td>71.2833</td>
+      <td>C85</td>
+      <td>4.280593</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>1</td>
+      <td>Heikkinen, Miss. Laina</td>
+      <td>26.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>STON/O2. 3101282</td>
+      <td>7.9250</td>
+      <td>B96 B98</td>
+      <td>2.188856</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4</td>
+      <td>1</td>
+      <td>Futrelle, Mrs. Jacques Heath (Lily May Peel)</td>
+      <td>35.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>113803</td>
+      <td>53.1000</td>
+      <td>C123</td>
+      <td>3.990834</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>5</td>
+      <td>0</td>
+      <td>Allen, Mr. William Henry</td>
+      <td>35.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>373450</td>
+      <td>8.0500</td>
+      <td>B96 B98</td>
+      <td>2.202765</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="55">
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1">dep_var <span class="op" style="color: #5E5E5E;">=</span> [<span class="st" style="color: #20794D;">'Survived'</span>]</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="56">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1">indep_vars <span class="op" style="color: #5E5E5E;">=</span> [<span class="st" style="color: #20794D;">'Age'</span>, <span class="st" style="color: #20794D;">'SibSp'</span>, <span class="st" style="color: #20794D;">'Parch'</span>, <span class="st" style="color: #20794D;">'LogFare'</span>, <span class="st" style="color: #20794D;">'Pclass_1'</span>, <span class="st" style="color: #20794D;">'Pclass_2'</span>, <span class="st" style="color: #20794D;">'Pclass_3'</span>, <span class="st" style="color: #20794D;">'Sex_female'</span>, <span class="st" style="color: #20794D;">'Sex_male'</span>, <span class="st" style="color: #20794D;">'Embarked_C'</span>, <span class="st" style="color: #20794D;">'Embarked_Q'</span>, <span class="st" style="color: #20794D;">'Embarked_S'</span>]</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="57">
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="bu" style="color: null;">len</span>(indep_vars)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="57">
+<pre><code>12</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="128">
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1">y <span class="op" style="color: #5E5E5E;">=</span> torch.tensor(data[dep_var].values, dtype<span class="op" style="color: #5E5E5E;">=</span>torch.<span class="bu" style="color: null;">float</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="129">
+<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1">X <span class="op" style="color: #5E5E5E;">=</span> torch.tensor(data[indep_vars].values, dtype<span class="op" style="color: #5E5E5E;">=</span>torch.<span class="bu" style="color: null;">float</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="130">
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1">vals, indicies <span class="op" style="color: #5E5E5E;">=</span> X.<span class="bu" style="color: null;">max</span>(dim<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">0</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="131">
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1">X <span class="op" style="color: #5E5E5E;">=</span> X <span class="op" style="color: #5E5E5E;">/</span> vals</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="141">
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1">trn_split, val_split <span class="op" style="color: #5E5E5E;">=</span> RandomSplitter(seed<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">42</span>)(X)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="142">
+<div class="sourceCode cell-code" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><span class="bu" style="color: null;">len</span>(trn_split), <span class="bu" style="color: null;">len</span>(val_split)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="142">
+<pre><code>(713, 178)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="184">
+<div class="sourceCode cell-code" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1">X_train, y_train <span class="op" style="color: #5E5E5E;">=</span> X[trn_split], y[trn_split]</span>
+<span id="cb30-2">X_val, y_val <span class="op" style="color: #5E5E5E;">=</span> X[val_split], y[val_split]</span></code></pre></div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="145">
+<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1">nips <span class="op" style="color: #5E5E5E;">=</span> X_train.shape[<span class="dv" style="color: #AD0000;">1</span>]</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="466">
+<div class="sourceCode cell-code" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1">torch.manual_seed(<span class="dv" style="color: #AD0000;">42</span>)</span>
+<span id="cb32-2"></span>
+<span id="cb32-3"><span class="kw" style="color: #003B4F;">def</span> get_coeffs(nips <span class="op" style="color: #5E5E5E;">=</span> nips, l1_size <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">20</span>, n_classes <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">1</span>):</span>
+<span id="cb32-4">    layer1 <span class="op" style="color: #5E5E5E;">=</span> (torch.rand(nips, l1_size)<span class="op" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.5</span>) <span class="op" style="color: #5E5E5E;">/</span> nips</span>
+<span id="cb32-5">    layer2 <span class="op" style="color: #5E5E5E;">=</span> (torch.rand(l1_size, n_classes)<span class="op" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.5</span>)</span>
+<span id="cb32-6">    const <span class="op" style="color: #5E5E5E;">=</span> torch.rand(<span class="dv" style="color: #AD0000;">1</span>)[<span class="dv" style="color: #AD0000;">0</span>]</span>
+<span id="cb32-7">    <span class="cf" style="color: #003B4F;">return</span> layer1.requires_grad_(), layer2.requires_grad_(), const.requires_grad_()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="467">
+<div class="sourceCode cell-code" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><span class="kw" style="color: #003B4F;">def</span> forward_pass(coeffs, X_train):</span>
+<span id="cb33-2">    l1, l2, const <span class="op" style="color: #5E5E5E;">=</span> coeffs</span>
+<span id="cb33-3">    acts <span class="op" style="color: #5E5E5E;">=</span> F.relu(X_train<span class="op" style="color: #5E5E5E;">@</span>l1)</span>
+<span id="cb33-4">    acts <span class="op" style="color: #5E5E5E;">=</span> acts<span class="op" style="color: #5E5E5E;">@</span>l2 <span class="op" style="color: #5E5E5E;">+</span> const</span>
+<span id="cb33-5">    <span class="cf" style="color: #003B4F;">return</span> torch.sigmoid(acts)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="468">
+<div class="sourceCode cell-code" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><span class="kw" style="color: #003B4F;">def</span> calc_loss(acts, y_train): <span class="cf" style="color: #003B4F;">return</span> torch.<span class="bu" style="color: null;">abs</span>(acts <span class="op" style="color: #5E5E5E;">-</span> y_train).mean()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="469">
+<div class="sourceCode cell-code" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><span class="kw" style="color: #003B4F;">def</span> backprop(coeffs, lr):</span>
+<span id="cb35-2">    <span class="cf" style="color: #003B4F;">for</span> layer <span class="kw" style="color: #003B4F;">in</span> coeffs:</span>
+<span id="cb35-3">        layer.sub_(layer.grad <span class="op" style="color: #5E5E5E;">*</span> lr)</span>
+<span id="cb35-4">        layer.grad.zero_()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="470">
+<div class="sourceCode cell-code" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><span class="kw" style="color: #003B4F;">def</span> one_epoch(coeffs, lr):</span>
+<span id="cb36-2">    acts <span class="op" style="color: #5E5E5E;">=</span> forward_pass(coeffs, X_train)</span>
+<span id="cb36-3">    loss <span class="op" style="color: #5E5E5E;">=</span> calc_loss(acts, y_train)</span>
+<span id="cb36-4">    loss.backward()</span>
+<span id="cb36-5">    <span class="cf" style="color: #003B4F;">with</span> torch.no_grad(): backprop(coeffs, lr)</span>
+<span id="cb36-6">    <span class="bu" style="color: null;">print</span>(<span class="ss" style="color: #20794D;">f"</span><span class="sc" style="color: #5E5E5E;">{</span>loss<span class="sc" style="color: #5E5E5E;">:.3f}</span><span class="ss" style="color: #20794D;">"</span>, end <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">"; "</span>)</span></code></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><span class="kw" style="color: #003B4F;">def</span> acc(coeffs): <span class="cf" style="color: #003B4F;">return</span> (y_val.<span class="bu" style="color: null;">bool</span>()<span class="op" style="color: #5E5E5E;">==</span>(forward_pass(coeffs, X_val)<span class="op" style="color: #5E5E5E;">&gt;</span><span class="fl" style="color: #AD0000;">0.5</span>)).<span class="bu" style="color: null;">float</span>().mean()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="487">
+<div class="sourceCode cell-code" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><span class="kw" style="color: #003B4F;">def</span> train_model(epochs<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">50</span>, lr<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">2</span>):</span>
+<span id="cb38-2">    torch.manual_seed(<span class="dv" style="color: #AD0000;">42</span>)</span>
+<span id="cb38-3">    coeffs <span class="op" style="color: #5E5E5E;">=</span> get_coeffs()</span>
+<span id="cb38-4">    <span class="cf" style="color: #003B4F;">for</span> i <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(epochs): one_epoch(coeffs, lr)</span>
+<span id="cb38-5">    <span class="cf" style="color: #003B4F;">return</span> coeffs, acc(coeffs)</span>
+<span id="cb38-6">    </span></code></pre></div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="490">
+<div class="sourceCode cell-code" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1">_, acc <span class="op" style="color: #5E5E5E;">=</span> train_model()</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0.548; 0.529; 0.503; 0.466; 0.408; 0.357; 0.330; 0.313; 0.298; 0.286; 0.277; 0.269; 0.261; 0.255; 0.249; 0.244; 0.239; 0.235; 0.231; 0.229; 0.226; 0.224; 0.222; 0.220; 0.219; 0.217; 0.216; 0.215; 0.214; 0.213; 0.212; 0.211; 0.211; 0.210; 0.209; 0.209; 0.208; 0.207; 0.207; 0.206; 0.206; 0.205; 0.205; 0.204; 0.204; 0.204; 0.203; 0.203; 0.203; 0.202; </code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="491">
+<div class="sourceCode cell-code" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1">acc</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="491">
+<pre><code>tensor(0.8258)</code></pre>
+</div>
+</div>
+
+
+
+ ]]></description>
+  <category>Python</category>
+  <category>Deep Learning</category>
+  <category>PyTorch</category>
+  <guid>https://jakegehri.github.io/projects/DNN From Scratch/no_hands.html</guid>
+  <pubDate>Tue, 01 Nov 2022 04:00:00 GMT</pubDate>
+  <media:content url="https://jakegehri.github.io/projects/DNN From Scratch/DNN_From_Scratch.jpeg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>Multi-label Classification of Amazonian Land Space</title>
   <dc:creator>Jake Gehri</dc:creator>
@@ -1660,6 +2376,797 @@ This share link expires in 72 hours. For free permanent hosting, check out Space
   <guid>https://jakegehri.github.io/projects/Trailcam/trailcam_model.html</guid>
   <pubDate>Wed, 12 Oct 2022 04:00:00 GMT</pubDate>
   <media:content url="https://jakegehri.github.io/projects/Trailcam/trail_cam_project.jpeg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>Twitter Bot: NLP Emotion Classifier</title>
+  <dc:creator>Jake Gehri</dc:creator>
+  <link>https://jakegehri.github.io/projects/Twitter Bot/model.html</link>
+  <description><![CDATA[ 
+
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="op" style="color: #5E5E5E;">!</span> huggingface<span class="op" style="color: #5E5E5E;">-</span>cli login</span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:24:28.436709Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:24:28.436309Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:24:28.442511Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:24:28.440786Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:24:28.436658Z&quot;}" data-outputid="ed2b37e1-eaa3-4c76-b5bc-43f532ee565c" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="op" style="color: #5E5E5E;">!</span> pip install datasets</span>
+<span id="cb2-2"><span class="im" style="color: #00769E;">from</span> datasets <span class="im" style="color: #00769E;">import</span> list_datasets</span>
+<span id="cb2-3"><span class="im" style="color: #00769E;">import</span> tensorflow <span class="im" style="color: #00769E;">as</span> tf</span>
+<span id="cb2-4"><span class="im" style="color: #00769E;">from</span> transformers <span class="im" style="color: #00769E;">import</span> pipeline, PushToHubCallback</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/
+Requirement already satisfied: datasets in /usr/local/lib/python3.7/dist-packages (2.5.1)
+Requirement already satisfied: pandas in /usr/local/lib/python3.7/dist-packages (from datasets) (1.3.5)
+Requirement already satisfied: multiprocess in /usr/local/lib/python3.7/dist-packages (from datasets) (0.70.13)
+Requirement already satisfied: importlib-metadata in /usr/local/lib/python3.7/dist-packages (from datasets) (4.12.0)
+Requirement already satisfied: tqdm&gt;=4.62.1 in /usr/local/lib/python3.7/dist-packages (from datasets) (4.64.1)
+Requirement already satisfied: pyarrow&gt;=6.0.0 in /usr/local/lib/python3.7/dist-packages (from datasets) (6.0.1)
+Requirement already satisfied: xxhash in /usr/local/lib/python3.7/dist-packages (from datasets) (3.0.0)
+Requirement already satisfied: aiohttp in /usr/local/lib/python3.7/dist-packages (from datasets) (3.8.1)
+Requirement already satisfied: responses&lt;0.19 in /usr/local/lib/python3.7/dist-packages (from datasets) (0.18.0)
+Requirement already satisfied: dill&lt;0.3.6 in /usr/local/lib/python3.7/dist-packages (from datasets) (0.3.5.1)
+Requirement already satisfied: requests&gt;=2.19.0 in /usr/local/lib/python3.7/dist-packages (from datasets) (2.23.0)
+Requirement already satisfied: packaging in /usr/local/lib/python3.7/dist-packages (from datasets) (21.3)
+Requirement already satisfied: fsspec[http]&gt;=2021.11.1 in /usr/local/lib/python3.7/dist-packages (from datasets) (2022.8.2)
+Requirement already satisfied: numpy&gt;=1.17 in /usr/local/lib/python3.7/dist-packages (from datasets) (1.21.6)
+Requirement already satisfied: huggingface-hub&lt;1.0.0,&gt;=0.1.0 in /usr/local/lib/python3.7/dist-packages (from datasets) (0.10.0)
+Requirement already satisfied: yarl&lt;2.0,&gt;=1.0 in /usr/local/lib/python3.7/dist-packages (from aiohttp-&gt;datasets) (1.8.1)
+Requirement already satisfied: async-timeout&lt;5.0,&gt;=4.0.0a3 in /usr/local/lib/python3.7/dist-packages (from aiohttp-&gt;datasets) (4.0.2)
+Requirement already satisfied: charset-normalizer&lt;3.0,&gt;=2.0 in /usr/local/lib/python3.7/dist-packages (from aiohttp-&gt;datasets) (2.1.1)
+Requirement already satisfied: multidict&lt;7.0,&gt;=4.5 in /usr/local/lib/python3.7/dist-packages (from aiohttp-&gt;datasets) (6.0.2)
+Requirement already satisfied: aiosignal&gt;=1.1.2 in /usr/local/lib/python3.7/dist-packages (from aiohttp-&gt;datasets) (1.2.0)
+Requirement already satisfied: attrs&gt;=17.3.0 in /usr/local/lib/python3.7/dist-packages (from aiohttp-&gt;datasets) (22.1.0)
+Requirement already satisfied: typing-extensions&gt;=3.7.4 in /usr/local/lib/python3.7/dist-packages (from aiohttp-&gt;datasets) (4.1.1)
+Requirement already satisfied: asynctest==0.13.0 in /usr/local/lib/python3.7/dist-packages (from aiohttp-&gt;datasets) (0.13.0)
+Requirement already satisfied: frozenlist&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from aiohttp-&gt;datasets) (1.3.1)
+Requirement already satisfied: pyyaml&gt;=5.1 in /usr/local/lib/python3.7/dist-packages (from huggingface-hub&lt;1.0.0,&gt;=0.1.0-&gt;datasets) (6.0)
+Requirement already satisfied: filelock in /usr/local/lib/python3.7/dist-packages (from huggingface-hub&lt;1.0.0,&gt;=0.1.0-&gt;datasets) (3.8.0)
+Requirement already satisfied: pyparsing!=3.0.5,&gt;=2.0.2 in /usr/local/lib/python3.7/dist-packages (from packaging-&gt;datasets) (3.0.9)
+Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,&lt;1.26,&gt;=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests&gt;=2.19.0-&gt;datasets) (1.25.11)
+Requirement already satisfied: idna&lt;3,&gt;=2.5 in /usr/local/lib/python3.7/dist-packages (from requests&gt;=2.19.0-&gt;datasets) (2.10)
+Requirement already satisfied: certifi&gt;=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from requests&gt;=2.19.0-&gt;datasets) (2022.6.15)
+Requirement already satisfied: chardet&lt;4,&gt;=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests&gt;=2.19.0-&gt;datasets) (3.0.4)
+Requirement already satisfied: zipp&gt;=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata-&gt;datasets) (3.8.1)
+Requirement already satisfied: python-dateutil&gt;=2.7.3 in /usr/local/lib/python3.7/dist-packages (from pandas-&gt;datasets) (2.8.2)
+Requirement already satisfied: pytz&gt;=2017.3 in /usr/local/lib/python3.7/dist-packages (from pandas-&gt;datasets) (2022.2.1)
+Requirement already satisfied: six&gt;=1.5 in /usr/local/lib/python3.7/dist-packages (from python-dateutil&gt;=2.7.3-&gt;pandas-&gt;datasets) (1.15.0)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:48:28.988670Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:48:28.988086Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:48:29.881986Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:48:29.881171Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:48:28.988660Z&quot;}" data-outputid="027fdd30-036a-4e53-cf12-53d5da51cad6" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">all_datasets <span class="op" style="color: #5E5E5E;">=</span> list_datasets()</span>
+<span id="cb4-2"><span class="bu" style="color: null;">print</span>(all_datasets[<span class="dv" style="color: #AD0000;">0</span>:<span class="dv" style="color: #AD0000;">5</span>])</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>['acronym_identification', 'ade_corpus_v2', 'adversarial_qa', 'aeslc', 'afrikaans_ner_corpus']</code></pre>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:48:46.716475Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:48:46.716108Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:48:46.720996Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:48:46.720155Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:48:46.716447Z&quot;}" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="im" style="color: #00769E;">from</span> datasets <span class="im" style="color: #00769E;">import</span> load_dataset</span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:49:16.109008Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:49:16.108188Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:49:16.302966Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:49:16.301967Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:49:16.108985Z&quot;}" data-outputid="6270b862-8d63-40cc-ed9a-73809ea15f0e" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">emotions <span class="op" style="color: #5E5E5E;">=</span> load_dataset(<span class="st" style="color: #20794D;">'emotion'</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/usr/local/lib/python3.7/dist-packages/huggingface_hub/utils/_deprecation.py:97: FutureWarning: Deprecated argument(s) used in 'dataset_info': token. Will not be supported from version '0.12'.
+  warnings.warn(message, FutureWarning)</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"11621806475d4354a5c502b7ce12f3e2","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"51cb32d3fae64ed7a2bf28b00eeb21e5","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>WARNING:datasets.builder:Using custom data configuration default</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Downloading and preparing dataset emotion/default (download: 1.97 MiB, generated: 2.07 MiB, post-processed: Unknown size, total: 4.05 MiB) to /root/.cache/huggingface/datasets/emotion/default/0.0.0/348f63ca8e27b3713b6c04d723efe6d824a56fb3d1449794716c0f0296072705...</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"083556871dd04ec596bfa70c49bd81de","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"af929b7494444d0cbdcd4834bb48981f","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ec3b9f18c647407d8d6af89a343dab7a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"395bdf189a894a1cb99c76fdb0689c8a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"e6f765d5c1cb44debfd8b8b5055dd485","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1e61b0eec0534e2690432de91a47e218","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Dataset emotion downloaded and prepared to /root/.cache/huggingface/datasets/emotion/default/0.0.0/348f63ca8e27b3713b6c04d723efe6d824a56fb3d1449794716c0f0296072705. Subsequent calls will reuse this data.</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"815006b54ba4425dbf03eef7ccd9dd19","version_major":2,"version_minor":0}
+</script>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:49:36.859107Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:49:36.858732Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:49:36.870636Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:49:36.869313Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:49:36.859077Z&quot;}" data-outputid="18be657d-93d6-426c-85e2-e9a6b790b2a6" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1">train_ds <span class="op" style="color: #5E5E5E;">=</span> emotions[<span class="st" style="color: #20794D;">'train'</span>]</span>
+<span id="cb12-2">train_ds</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<pre><code>Dataset({
+    features: ['text', 'label'],
+    num_rows: 16000
+})</code></pre>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:49:47.815928Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:49:47.815455Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:49:47.826266Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:49:47.824870Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:49:47.815884Z&quot;}" data-outputid="733ba1d7-0bf0-4538-a0ab-77664edae0bf" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">train_ds[<span class="dv" style="color: #AD0000;">0</span>]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>{'text': 'i didnt feel humiliated', 'label': 0}</code></pre>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:50:54.334234Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:50:54.333543Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:50:54.338348Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:50:54.337454Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:50:54.334204Z&quot;}" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><span class="im" style="color: #00769E;">import</span> pandas <span class="im" style="color: #00769E;">as</span> pd</span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:51:50.976680Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:51:50.976303Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:51:50.983586Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:51:50.982214Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:51:50.976652Z&quot;}" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">emotions.set_format(<span class="bu" style="color: null;">type</span> <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'pandas'</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:52:19.377309Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:52:19.376810Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:52:19.405915Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:52:19.404678Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:52:19.377278Z&quot;}" data-outputid="23dacb34-92d8-48fd-f1bd-8457f3ef9a1b" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1">df <span class="op" style="color: #5E5E5E;">=</span> emotions[<span class="st" style="color: #20794D;">'train'</span>][:]</span>
+<span id="cb18-2">df</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+
+
+  <div id="df-8635b291-53af-49d1-b4e0-d1bfd7582e8e">
+    <div class="colab-df-container">
+      <div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>text</th>
+      <th>label</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>i didnt feel humiliated</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>i can go from feeling so hopeless to so damned...</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>im grabbing a minute to post i feel greedy wrong</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>i am ever feeling nostalgic about the fireplac...</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>i am feeling grouchy</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>15995</th>
+      <td>i just had a very brief time in the beanbag an...</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>15996</th>
+      <td>i am now turning and i feel pathetic that i am...</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>15997</th>
+      <td>i feel strong and good overall</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>15998</th>
+      <td>i feel like this was such a rude comment and i...</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>15999</th>
+      <td>i know a lot but i feel so stupid because i ca...</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+<p>16000 rows × 2 columns</p>
+</div>
+      <button class="colab-df-convert" onclick="convertToInteractive('df-8635b291-53af-49d1-b4e0-d1bfd7582e8e')" title="Convert this dataframe to an interactive table." style="display:none;">
+        
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 0 24 24" width="24px">
+    <path d="M0 0h24v24H0V0z" fill="none"></path>
+    <path d="M18.56 5.44l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94zm-11 1L8.5 8.5l.94-2.06 2.06-.94-2.06-.94L8.5 2.5l-.94 2.06-2.06.94zm10 10l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94z"></path><path d="M17.41 7.96l-1.37-1.37c-.4-.4-.92-.59-1.43-.59-.52 0-1.04.2-1.43.59L10.3 9.45l-7.72 7.72c-.78.78-.78 2.05 0 2.83L4 21.41c.39.39.9.59 1.41.59.51 0 1.02-.2 1.41-.59l7.78-7.78 2.81-2.81c.8-.78.8-2.07 0-2.86zM5.41 20L4 18.59l7.72-7.72 1.47 1.35L5.41 20z"></path>
+  </svg>
+      </button>
+      
+  <style>
+    .colab-df-container {
+      display:flex;
+      flex-wrap:wrap;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+      <script>
+        const buttonEl =
+          document.querySelector('#df-8635b291-53af-49d1-b4e0-d1bfd7582e8e button.colab-df-convert');
+        buttonEl.style.display =
+          google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+        async function convertToInteractive(key) {
+          const element = document.querySelector('#df-8635b291-53af-49d1-b4e0-d1bfd7582e8e');
+          const dataTable =
+            await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                     [key], {});
+          if (!dataTable) return;
+
+          const docLinkHtml = 'Like what you see? Visit the ' +
+            '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+            + ' to learn more about interactive tables.';
+          element.innerHTML = '';
+          dataTable['output_type'] = 'display_data';
+          await google.colab.output.renderOutput(dataTable, element);
+          const docLink = document.createElement('div');
+          docLink.innerHTML = docLinkHtml;
+          element.appendChild(docLink);
+        }
+      </script>
+    </div>
+  </div>
+  
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:54:59.613346Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:54:59.612028Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:54:59.654611Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:54:59.653815Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:54:59.613245Z&quot;}" data-outputid="39daccba-5217-482d-8c62-3746ee725436" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="kw" style="color: #003B4F;">def</span> label_int2str(row):</span>
+<span id="cb19-2">    <span class="cf" style="color: #003B4F;">return</span> emotions[<span class="st" style="color: #20794D;">'train'</span>].features[<span class="st" style="color: #20794D;">'label'</span>].int2str(row)</span>
+<span id="cb19-3">df[<span class="st" style="color: #20794D;">'label_name'</span>] <span class="op" style="color: #5E5E5E;">=</span> df[<span class="st" style="color: #20794D;">'label'</span>].<span class="bu" style="color: null;">apply</span>(label_int2str)</span>
+<span id="cb19-4">df.head()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+
+
+  <div id="df-1f3104e4-3409-4449-88a5-e6132656e4d8">
+    <div class="colab-df-container">
+      <div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>text</th>
+      <th>label</th>
+      <th>label_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>i didnt feel humiliated</td>
+      <td>0</td>
+      <td>sadness</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>i can go from feeling so hopeless to so damned...</td>
+      <td>0</td>
+      <td>sadness</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>im grabbing a minute to post i feel greedy wrong</td>
+      <td>3</td>
+      <td>anger</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>i am ever feeling nostalgic about the fireplac...</td>
+      <td>2</td>
+      <td>love</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>i am feeling grouchy</td>
+      <td>3</td>
+      <td>anger</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+      <button class="colab-df-convert" onclick="convertToInteractive('df-1f3104e4-3409-4449-88a5-e6132656e4d8')" title="Convert this dataframe to an interactive table." style="display:none;">
+        
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewbox="0 0 24 24" width="24px">
+    <path d="M0 0h24v24H0V0z" fill="none"></path>
+    <path d="M18.56 5.44l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94zm-11 1L8.5 8.5l.94-2.06 2.06-.94-2.06-.94L8.5 2.5l-.94 2.06-2.06.94zm10 10l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94z"></path><path d="M17.41 7.96l-1.37-1.37c-.4-.4-.92-.59-1.43-.59-.52 0-1.04.2-1.43.59L10.3 9.45l-7.72 7.72c-.78.78-.78 2.05 0 2.83L4 21.41c.39.39.9.59 1.41.59.51 0 1.02-.2 1.41-.59l7.78-7.78 2.81-2.81c.8-.78.8-2.07 0-2.86zM5.41 20L4 18.59l7.72-7.72 1.47 1.35L5.41 20z"></path>
+  </svg>
+      </button>
+      
+  <style>
+    .colab-df-container {
+      display:flex;
+      flex-wrap:wrap;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+      <script>
+        const buttonEl =
+          document.querySelector('#df-1f3104e4-3409-4449-88a5-e6132656e4d8 button.colab-df-convert');
+        buttonEl.style.display =
+          google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+        async function convertToInteractive(key) {
+          const element = document.querySelector('#df-1f3104e4-3409-4449-88a5-e6132656e4d8');
+          const dataTable =
+            await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                     [key], {});
+          if (!dataTable) return;
+
+          const docLinkHtml = 'Like what you see? Visit the ' +
+            '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+            + ' to learn more about interactive tables.';
+          element.innerHTML = '';
+          dataTable['output_type'] = 'display_data';
+          await google.colab.output.renderOutput(dataTable, element);
+          const docLink = document.createElement('div');
+          docLink.innerHTML = docLinkHtml;
+          element.appendChild(docLink);
+        }
+      </script>
+    </div>
+  </div>
+  
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T21:58:10.562395Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T21:58:10.561788Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T21:58:10.791804Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T21:58:10.790022Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T21:58:10.562359Z&quot;}" data-outputid="b136d50c-599c-4bbf-88ab-67d5aeffaf1e" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="im" style="color: #00769E;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;">as</span> plt</span>
+<span id="cb20-2"></span>
+<span id="cb20-3">df[<span class="st" style="color: #20794D;">'label_name'</span>].value_counts(ascending<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>).plot.barh()</span>
+<span id="cb20-4">plt.title(<span class="st" style="color: #20794D;">"Frequency of Classes"</span>)</span>
+<span id="cb20-5">plt.show()</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Twitter Bot/model_files/figure-html/cell-13-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T22:07:13.771289Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T22:07:13.770002Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T22:07:13.977101Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T22:07:13.976317Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T22:07:13.771249Z&quot;}" data-outputid="66e0e7db-40fe-423a-84c2-63766b23aad2" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1">df[<span class="st" style="color: #20794D;">'words_per_tweet'</span>] <span class="op" style="color: #5E5E5E;">=</span> df[<span class="st" style="color: #20794D;">'text'</span>].<span class="bu" style="color: null;">str</span>.split().<span class="bu" style="color: null;">apply</span>(<span class="bu" style="color: null;">len</span>)</span>
+<span id="cb21-2">df.boxplot(<span class="st" style="color: #20794D;">'words_per_tweet'</span>, by<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'label_name'</span>, grid<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">False</span>, showfliers<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">False</span>)</span>
+<span id="cb21-3">plt.suptitle(<span class="st" style="color: #20794D;">""</span>)</span>
+<span id="cb21-4">plt.xlabel(<span class="st" style="color: #20794D;">""</span>)</span>
+<span id="cb21-5">plt.show()</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/usr/local/lib/python3.7/dist-packages/matplotlib/cbook/__init__.py:1376: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  X = np.atleast_1d(X.T if isinstance(X, np.ndarray) else np.asarray(X))</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Twitter Bot/model_files/figure-html/cell-14-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T22:27:24.291408Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T22:27:24.291003Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T22:27:24.297413Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T22:27:24.296338Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T22:27:24.291379Z&quot;}" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1">emotions.reset_format()</span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:24:37.731597Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:24:37.731091Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:24:38.323916Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:24:38.322822Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:24:37.731558Z&quot;}" data-outputid="fd095a3a-84a7-451d-b9a1-e0ba76cca36e" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><span class="op" style="color: #5E5E5E;">!</span> pip install transformers</span>
+<span id="cb24-2"><span class="im" style="color: #00769E;">from</span> transformers <span class="im" style="color: #00769E;">import</span> AutoTokenizer</span>
+<span id="cb24-3"></span>
+<span id="cb24-4">model_checkpoint <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'distilbert-base-uncased'</span></span>
+<span id="cb24-5">tokenizer <span class="op" style="color: #5E5E5E;">=</span> AutoTokenizer.from_pretrained(model_checkpoint)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/
+Collecting transformers
+  Downloading transformers-4.22.2-py3-none-any.whl (4.9 MB)
+     |████████████████████████████████| 4.9 MB 34.2 MB/s 
+Collecting tokenizers!=0.11.3,&lt;0.13,&gt;=0.11.1
+  Downloading tokenizers-0.12.1-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (6.6 MB)
+     |████████████████████████████████| 6.6 MB 56.8 MB/s 
+Requirement already satisfied: pyyaml&gt;=5.1 in /usr/local/lib/python3.7/dist-packages (from transformers) (6.0)
+Requirement already satisfied: numpy&gt;=1.17 in /usr/local/lib/python3.7/dist-packages (from transformers) (1.21.6)
+Requirement already satisfied: filelock in /usr/local/lib/python3.7/dist-packages (from transformers) (3.8.0)
+Requirement already satisfied: huggingface-hub&lt;1.0,&gt;=0.9.0 in /usr/local/lib/python3.7/dist-packages (from transformers) (0.10.0)
+Requirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.7/dist-packages (from transformers) (2022.6.2)
+Requirement already satisfied: tqdm&gt;=4.27 in /usr/local/lib/python3.7/dist-packages (from transformers) (4.64.1)
+Requirement already satisfied: importlib-metadata in /usr/local/lib/python3.7/dist-packages (from transformers) (4.12.0)
+Requirement already satisfied: packaging&gt;=20.0 in /usr/local/lib/python3.7/dist-packages (from transformers) (21.3)
+Requirement already satisfied: requests in /usr/local/lib/python3.7/dist-packages (from transformers) (2.23.0)
+Requirement already satisfied: typing-extensions&gt;=3.7.4.3 in /usr/local/lib/python3.7/dist-packages (from huggingface-hub&lt;1.0,&gt;=0.9.0-&gt;transformers) (4.1.1)
+Requirement already satisfied: pyparsing!=3.0.5,&gt;=2.0.2 in /usr/local/lib/python3.7/dist-packages (from packaging&gt;=20.0-&gt;transformers) (3.0.9)
+Requirement already satisfied: zipp&gt;=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata-&gt;transformers) (3.8.1)
+Requirement already satisfied: chardet&lt;4,&gt;=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests-&gt;transformers) (3.0.4)
+Requirement already satisfied: idna&lt;3,&gt;=2.5 in /usr/local/lib/python3.7/dist-packages (from requests-&gt;transformers) (2.10)
+Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,&lt;1.26,&gt;=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests-&gt;transformers) (1.25.11)
+Requirement already satisfied: certifi&gt;=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from requests-&gt;transformers) (2022.6.15)
+Installing collected packages: tokenizers, transformers
+Successfully installed tokenizers-0.12.1 transformers-4.22.2</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ab506feb8d424e178f27772906b52fe0","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"623e8f408f754327818a41dfd95b0913","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"f465b1de2325434c934e11378e569bc4","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"a5d21490c7284c399bd57c7fa91d0de9","version_major":2,"version_minor":0}
+</script>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:29:47.507065Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:29:47.506046Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:29:47.512957Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:29:47.511540Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:29:47.507012Z&quot;}" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><span class="kw" style="color: #003B4F;">def</span> tokenize(batch):</span>
+<span id="cb26-2">    <span class="cf" style="color: #003B4F;">return</span> tokenizer(batch[<span class="st" style="color: #20794D;">'text'</span>], padding<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, truncation<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:29:50.094007Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:29:50.093430Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:29:50.101640Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:29:50.100381Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:29:50.093964Z&quot;}" data-outputid="e6689fc1-db23-4c0d-83fc-3d14a2307a01" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><span class="bu" style="color: null;">print</span>(tokenize(emotions[<span class="st" style="color: #20794D;">'train'</span>][<span class="dv" style="color: #AD0000;">0</span>:<span class="dv" style="color: #AD0000;">2</span>]))</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'input_ids': [[101, 1045, 2134, 2102, 2514, 26608, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [101, 1045, 2064, 2175, 2013, 3110, 2061, 20625, 2000, 2061, 9636, 17772, 2074, 2013, 2108, 2105, 2619, 2040, 14977, 1998, 2003, 8300, 102]], 'attention_mask': [[1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]}</code></pre>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:29:51.680136Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:29:51.679743Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:29:53.114946Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:29:53.113973Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:29:51.680107Z&quot;}" data-outputid="94570890-d1a5-4867-d601-1c3b1b8efa08" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1">emotions_encoded <span class="op" style="color: #5E5E5E;">=</span> emotions.<span class="bu" style="color: null;">map</span>(tokenize, batched <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">True</span>, batch_size <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"c6db5cbe620b4438a9db7128839c9a20","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"5329700dfc07414ea17abd99cb8e5ba8","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1b50573fe2bc426dbb98f620e08ddc4e","version_major":2,"version_minor":0}
+</script>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:32:16.854608Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:32:16.854188Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:32:17.692440Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:32:17.691759Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:32:16.854579Z&quot;}" data-outputid="cc29f914-54db-4c8d-afc6-f03306f00c6e" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><span class="im" style="color: #00769E;">from</span> transformers <span class="im" style="color: #00769E;">import</span> TFAutoModelForSequenceClassification</span>
+<span id="cb30-2"></span>
+<span id="cb30-3">num_labels <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">6</span></span>
+<span id="cb30-4"></span>
+<span id="cb30-5">tf_model <span class="op" style="color: #5E5E5E;">=</span> TFAutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels<span class="op" style="color: #5E5E5E;">=</span>num_labels)</span>
+<span id="cb30-6">tf_model</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"913427b83dc94567bc31ac860e20caa5","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Some layers from the model checkpoint at distilbert-base-uncased were not used when initializing TFDistilBertForSequenceClassification: ['vocab_layer_norm', 'vocab_transform', 'activation_13', 'vocab_projector']
+- This IS expected if you are initializing TFDistilBertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing TFDistilBertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some layers of TFDistilBertForSequenceClassification were not initialized from the model checkpoint at distilbert-base-uncased and are newly initialized: ['dropout_19', 'pre_classifier', 'classifier']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<pre><code>&lt;transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForSequenceClassification at 0x7f50d851c510&gt;</code></pre>
+</div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:33:16.422947Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:33:16.421917Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:33:16.427084Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:33:16.426174Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:33:16.422947Z&quot;}" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><span class="im" style="color: #00769E;">from</span> sklearn.metrics <span class="im" style="color: #00769E;">import</span> accuracy_score, f1_score</span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:39:10.445461Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:39:10.444909Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:39:10.451785Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:39:10.449871Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:39:10.445407Z&quot;}" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1">tokenizer_columns <span class="op" style="color: #5E5E5E;">=</span> tokenizer.model_input_names</span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:41:37.144204Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:41:37.143762Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:41:37.150401Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:41:37.148636Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:41:37.144175Z&quot;}" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1">batch_size <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">64</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:41:38.153296Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:41:38.152922Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:41:38.533966Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:41:38.532419Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:41:38.153267Z&quot;}" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1">tf_train_dataset <span class="op" style="color: #5E5E5E;">=</span> emotions_encoded[<span class="st" style="color: #20794D;">'train'</span>].to_tf_dataset(columns <span class="op" style="color: #5E5E5E;">=</span> tokenizer_columns, </span>
+<span id="cb36-2">                                                           label_cols <span class="op" style="color: #5E5E5E;">=</span> [<span class="st" style="color: #20794D;">'label'</span>], </span>
+<span id="cb36-3">                                                           shuffle<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, batch_size<span class="op" style="color: #5E5E5E;">=</span>batch_size)</span>
+<span id="cb36-4"></span>
+<span id="cb36-5">tf_validation_dataset <span class="op" style="color: #5E5E5E;">=</span> emotions_encoded[<span class="st" style="color: #20794D;">'validation'</span>].to_tf_dataset(columns <span class="op" style="color: #5E5E5E;">=</span> tokenizer_columns, </span>
+<span id="cb36-6">                                                           label_cols <span class="op" style="color: #5E5E5E;">=</span> [<span class="st" style="color: #20794D;">'label'</span>], </span>
+<span id="cb36-7">                                                           shuffle<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, batch_size<span class="op" style="color: #5E5E5E;">=</span>batch_size)</span></code></pre></div>
+</div>
+<div class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2022-10-03T23:44:29.545249Z&quot;,&quot;iopub.status.busy&quot;:&quot;2022-10-03T23:44:29.544817Z&quot;,&quot;iopub.status.idle&quot;:&quot;2022-10-03T23:55:14.065511Z&quot;,&quot;shell.execute_reply&quot;:&quot;2022-10-03T23:55:14.064328Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2022-10-03T23:44:29.545205Z&quot;}" data-outputid="4f1ff79a-bccc-4a12-f9fa-27f085fc9e50" data-execution_count="54">
+<div class="sourceCode cell-code" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1">callbacks <span class="op" style="color: #5E5E5E;">=</span> [PushToHubCallback(<span class="st" style="color: #20794D;">"model_output/"</span>,</span>
+<span id="cb37-2">                               tokenizer<span class="op" style="color: #5E5E5E;">=</span>tokenizer,</span>
+<span id="cb37-3">                               hub_model_id<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">"twitter-emotion-classifier-BERT"</span>)]</span>
+<span id="cb37-4"></span>
+<span id="cb37-5">tf_model.<span class="bu" style="color: null;">compile</span>(optimizer<span class="op" style="color: #5E5E5E;">=</span>tf.keras.optimizers.Adam(learning_rate<span class="op" style="color: #5E5E5E;">=</span><span class="fl" style="color: #AD0000;">5e-5</span>), </span>
+<span id="cb37-6">                 loss <span class="op" style="color: #5E5E5E;">=</span> tf.keras.losses.SparseCategoricalCrossentropy(from_logits<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>),</span>
+<span id="cb37-7">                 metrics <span class="op" style="color: #5E5E5E;">=</span> tf.metrics.SparseCategoricalAccuracy())</span>
+<span id="cb37-8"></span>
+<span id="cb37-9">tf_model.fit(tf_train_dataset, validation_data <span class="op" style="color: #5E5E5E;">=</span> tf_validation_dataset, epochs <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">2</span>, callbacks<span class="op" style="color: #5E5E5E;">=</span>callbacks)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Cloning https://huggingface.co/jakegehri/twitter-emotion-classifier-BERT into local empty directory.
+WARNING:huggingface_hub.repository:Cloning https://huggingface.co/jakegehri/twitter-emotion-classifier-BERT into local empty directory.</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"d5181da19ff14f48a3680c891eced30e","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ccc77fa1f4ec424baac7206de330351b","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"6f4d79545e4841c399ff756da1a0f8e0","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1bbd8ec2d8ab40f98bf3b86f7c972a40","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1ed209bfda96462c9cc1e61c154e4c47","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"32168bf392074e7396e3fd218a1db5d1","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"e98b6ff54b4044879cae6b1a1aad1c96","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"c4ef8244c8074f7aa6bbef0662db2a86","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"42e9d2358fd44bb48c9cc2ca4e6bd444","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"68993ca3741e450982c9b5ef441f4f46","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"4fda354470f6425a894546694168b882","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"4d3e8ee6eb6a49debf876f612ef92fdc","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 1/2
+  6/250 [..............................] - ETA: 2:05 - loss: 0.1446 - sparse_categorical_accuracy: 0.9245</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>WARNING:tensorflow:Callback method `on_train_batch_end` is slow compared to the batch time (batch time: 0.1977s vs `on_train_batch_end` time: 0.3150s). Check your callbacks.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>250/250 [==============================] - 163s 624ms/step - loss: 0.1101 - sparse_categorical_accuracy: 0.9490 - val_loss: 0.1436 - val_sparse_categorical_accuracy: 0.9345
+Epoch 2/2
+250/250 [==============================] - 136s 545ms/step - loss: 0.0868 - sparse_categorical_accuracy: 0.9599 - val_loss: 0.1442 - val_sparse_categorical_accuracy: 0.9325</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Several commits (2) will be pushed upstream.
+WARNING:huggingface_hub.repository:Several commits (2) will be pushed upstream.
+The progress bars may be unreliable.
+WARNING:huggingface_hub.repository:The progress bars may be unreliable.</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"650588be783c4be18bd8b5152af09baa","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>remote: Scanning LFS files for validity, may be slow...        
+remote: LFS file scan complete.        
+To https://huggingface.co/jakegehri/twitter-emotion-classifier-BERT
+   a929610..8b9eebc  main -&gt; main
+
+WARNING:huggingface_hub.repository:remote: Scanning LFS files for validity, may be slow...        
+remote: LFS file scan complete.        
+To https://huggingface.co/jakegehri/twitter-emotion-classifier-BERT
+   a929610..8b9eebc  main -&gt; main
+</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="54">
+<pre><code>&lt;keras.callbacks.History at 0x7f4f960761d0&gt;</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="55">
+<div class="sourceCode cell-code" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1">tf_model.push_to_hub(<span class="st" style="color: #20794D;">"twitter-emotion-classifier-BERT"</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-outputid="989b8068-4162-46f3-d598-714c2d8a1ebf" data-execution_count="68">
+<div class="sourceCode cell-code" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1">classifier <span class="op" style="color: #5E5E5E;">=</span> pipeline(<span class="st" style="color: #20794D;">"text-classification"</span>, model <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">"jakegehri/twitter-emotion-classifier-BERT"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"9c4337075bfb43bc96ce5c509d6bcd8d","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Some layers from the model checkpoint at jakegehri/twitter-emotion-classifier-BERT were not used when initializing TFDistilBertForSequenceClassification: ['dropout_19']
+- This IS expected if you are initializing TFDistilBertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing TFDistilBertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some layers of TFDistilBertForSequenceClassification were not initialized from the model checkpoint at jakegehri/twitter-emotion-classifier-BERT and are newly initialized: ['dropout_98']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"edfdc8e2df484ee5a028d5d79e0903a0","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"bad515ae189846d9a205494050593e2a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1e1ed561bdc94450be8fb227dce2a67a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"d9a111fd30844c6d8447545f0a02d0fa","version_major":2,"version_minor":0}
+</script>
+</div>
+</div>
+<div class="cell" data-outputid="0f240809-4ff1-4e2b-8910-8cea2f4f8846" data-execution_count="152">
+<div class="sourceCode cell-code" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1">test_tweet <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">"what is going on"</span></span>
+<span id="cb48-2">preds <span class="op" style="color: #5E5E5E;">=</span> classifier(test_tweet, top_k<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">6</span>)</span>
+<span id="cb48-3">labels <span class="op" style="color: #5E5E5E;">=</span> emotions[<span class="st" style="color: #20794D;">'train'</span>].features[<span class="st" style="color: #20794D;">'label'</span>].names</span>
+<span id="cb48-4">emotion_int <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">int</span>(preds[<span class="dv" style="color: #AD0000;">0</span>][<span class="st" style="color: #20794D;">'label'</span>].replace(<span class="st" style="color: #20794D;">"_"</span>,<span class="st" style="color: #20794D;">" "</span>).split()[<span class="dv" style="color: #AD0000;">1</span>])</span>
+<span id="cb48-5">labels[emotion_int]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="152">
+<pre><code>'anger'</code></pre>
+</div>
+</div>
+<div class="cell" data-outputid="9c7f28b6-34c6-4b6d-8010-9244e9f27a96" data-execution_count="153">
+<div class="sourceCode cell-code" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1">preds</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="153">
+<pre><code>[{'label': 'LABEL_3', 'score': 0.6134325861930847},
+ {'label': 'LABEL_4', 'score': 0.3628736138343811},
+ {'label': 'LABEL_1', 'score': 0.01299766730517149},
+ {'label': 'LABEL_0', 'score': 0.008490157313644886},
+ {'label': 'LABEL_5', 'score': 0.0016536037437617779},
+ {'label': 'LABEL_2', 'score': 0.0005523563013412058}]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="154">
+<div class="sourceCode cell-code" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1">rank <span class="op" style="color: #5E5E5E;">=</span> []</span>
+<span id="cb52-2"></span>
+<span id="cb52-3"><span class="cf" style="color: #003B4F;">for</span> i <span class="kw" style="color: #003B4F;">in</span> preds:</span>
+<span id="cb52-4">  label <span class="op" style="color: #5E5E5E;">=</span> i[<span class="st" style="color: #20794D;">'label'</span>]</span>
+<span id="cb52-5">  rank.append(<span class="bu" style="color: null;">int</span>(i[<span class="st" style="color: #20794D;">'label'</span>].replace(<span class="st" style="color: #20794D;">"_"</span>,<span class="st" style="color: #20794D;">" "</span>).split()[<span class="dv" style="color: #AD0000;">1</span>]))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="155">
+<div class="sourceCode cell-code" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1">re_rank <span class="op" style="color: #5E5E5E;">=</span> []</span>
+<span id="cb53-2"><span class="cf" style="color: #003B4F;">for</span> i <span class="kw" style="color: #003B4F;">in</span> rank:</span>
+<span id="cb53-3">  re_rank.append(labels[i])</span></code></pre></div>
+</div>
+<div class="cell" data-outputid="84500616-d6fc-46a5-e3fb-e90a045a5e27" data-execution_count="156">
+<div class="sourceCode cell-code" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1">re_rank</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="156">
+<pre><code>['anger', 'fear', 'joy', 'sadness', 'surprise', 'love']</code></pre>
+</div>
+</div>
+<div class="cell" data-outputid="02fd8797-454e-45a1-8d6c-792c472e41c5" data-execution_count="157">
+<div class="sourceCode cell-code" id="cb56" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1">preds_df <span class="op" style="color: #5E5E5E;">=</span> pd.DataFrame(preds)</span>
+<span id="cb56-2">plt.bar(re_rank, <span class="dv" style="color: #AD0000;">100</span> <span class="op" style="color: #5E5E5E;">*</span> preds_df[<span class="st" style="color: #20794D;">'score'</span>], color <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'C0'</span>)</span>
+<span id="cb56-3">plt.title(<span class="ss" style="color: #20794D;">f'"</span><span class="sc" style="color: #5E5E5E;">{</span>test_tweet<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;">"'</span>)</span>
+<span id="cb56-4">plt.show()</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="https://jakegehri.github.io/projects/Twitter Bot/model_files/figure-html/cell-33-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+
+
+
+ ]]></description>
+  <category>Python</category>
+  <category>Deep Learning</category>
+  <category>NLP</category>
+  <guid>https://jakegehri.github.io/projects/Twitter Bot/model.html</guid>
+  <pubDate>Fri, 07 Oct 2022 04:00:00 GMT</pubDate>
+  <media:content url="https://jakegehri.github.io/projects/Twitter Bot/Twitter.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>

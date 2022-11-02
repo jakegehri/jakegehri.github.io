@@ -2,8 +2,10 @@
   {
     "listing": "/projects.html",
     "items": [
+      "/projects/DNN From Scratch/no_hands.html",
       "/projects/Amazon/amazon.html",
-      "/projects/Trailcam/trailcam_model.html"
+      "/projects/Trailcam/trailcam_model.html",
+      "/projects/Twitter Bot/model.html"
     ]
   },
   {
