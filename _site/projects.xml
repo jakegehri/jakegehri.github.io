@@ -832,11 +832,10 @@ Epoch: 5 | train_loss: 0.2995 | train_accuracy: 0.9148 | valid_loss: 0.1778 | va
  ]]></description>
   <category>Python</category>
   <category>Deep Learning</category>
-  <category>PyTorch</category>
   <category>Computer Vision</category>
   <guid>https://jakegehri.github.io/projects/Counting Cards/counting_cards.html</guid>
   <pubDate>Wed, 16 Nov 2022 05:00:00 GMT</pubDate>
-  <media:content url="https://jakegehri.github.io/projects/Counting Cards/playing_card_games.jpeg" medium="image" type="image/jpeg"/>
+  <media:content url="https://jakegehri.github.io/projects/Counting Cards/playing_card_games.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>DNN From Scratch: The nuts and bolts</title>
@@ -1549,7 +1548,6 @@ dtype: int64</code></pre>
  ]]></description>
   <category>Python</category>
   <category>Deep Learning</category>
-  <category>PyTorch</category>
   <guid>https://jakegehri.github.io/projects/DNN From Scratch/no_hands.html</guid>
   <pubDate>Tue, 01 Nov 2022 04:00:00 GMT</pubDate>
   <media:content url="https://jakegehri.github.io/projects/DNN From Scratch/DNN_From_Scratch.jpeg" medium="image" type="image/jpeg"/>
