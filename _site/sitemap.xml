@@ -1,31 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://jakegehri.github.io/projects/Counting Cards/counting_cards.html</loc>
+    <lastmod>2022-11-17T02:39:42.963Z</lastmod>
+  </url>
+  <url>
     <loc>https://jakegehri.github.io/projects/Amazon/amazon.html</loc>
-    <lastmod>2022-11-02T03:03:27.019Z</lastmod>
+    <lastmod>2022-11-17T02:36:52.777Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/Twitter Bot/model.html</loc>
-    <lastmod>2022-11-02T03:03:27.635Z</lastmod>
+    <lastmod>2022-11-17T02:36:53.307Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/DNN From Scratch/no_hands.html</loc>
-    <lastmod>2022-11-02T03:03:28.101Z</lastmod>
+    <lastmod>2022-11-17T02:36:53.688Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/Trailcam/trailcam_model.html</loc>
-    <lastmod>2022-11-02T03:03:28.584Z</lastmod>
+    <lastmod>2022-11-17T02:36:54.112Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects.html</loc>
-    <lastmod>2022-11-02T03:03:29.004Z</lastmod>
+    <lastmod>2022-11-17T02:39:43.410Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/index.html</loc>
-    <lastmod>2022-11-02T03:03:29.314Z</lastmod>
+    <lastmod>2022-11-17T02:38:35.307Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/blog.html</loc>
-    <lastmod>2022-11-02T03:03:29.608Z</lastmod>
+    <lastmod>2022-11-17T02:36:55.120Z</lastmod>
   </url>
 </urlset>
