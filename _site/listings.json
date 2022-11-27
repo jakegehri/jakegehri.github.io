@@ -2,6 +2,7 @@
   {
     "listing": "/projects.html",
     "items": [
+      "/projects/Syllogism Classification/syllogism_classification.html",
       "/projects/Counting Cards/counting_cards.html",
       "/projects/DNN From Scratch/no_hands.html",
       "/projects/Amazon/amazon.html",
