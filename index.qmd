@@ -41,4 +41,7 @@ B.A. in Global Affairs | August 2018 - May 2022
 
 ## Selected Projects
 
+[**Syllogism Validation with BERT.**](https://jakegehri.github.io/projects/Syllogism%20Classification/syllogism_classification.html) Given two premises this validation model can classify validity with 85% accuracy on a 50/50 split dataset. <br />
+
+[**Counting Cards: Computer vision classifier for playing cards.**](https://jakegehri.github.io/projects/Counting%20Cards/counting_cards.html) A PyTorch playing card multi-label classifier from scratch. Basic CNN, EfficientNet with & without augmentation. Achieves 98% accuracy. <br />
 :::
