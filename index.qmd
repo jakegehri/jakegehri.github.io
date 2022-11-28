@@ -21,7 +21,9 @@ comments: false
 ::: {.column-page}
 
 ## Bio
+My name is Jake Gehri. I am from Buckley, WA and currently reside in New York City, where I work as an Investment Banking Analyst for Rothschild & Co. I graduated from Yale University in 2022 where I majored in Economics and Global affairs, and played on the Yale Baseball team. 
 
+I am interested in Artificial Intelligence and am self-taught in everything I know. I am looking to pursue graduate studies in computer science (artificial intelligence) in the near future.
 
 ## Education
 
