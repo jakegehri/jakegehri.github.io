@@ -303,7 +303,7 @@ Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.</code></
 <pre><code>'Premise 1: All men are mortal. Premise 2: Socrates is a man. $ Conclusion:  Socrates is mortal'</code></pre>
 </div>
 </div>
-<p>I dont know why it is generating this red box error, I believe it has something to do with me changing the models innate tokens in the beginning. Byt we can see that the model was able to accurately generate the conclusion for this syllogism. This first example is using greedy search, where our model simply makes predictions based on the most likely next word.</p>
+<p>I dont know why it is generating this error, I believe it has something to do with me changing the models innate tokens in the beginning. But we can see that the model was able to accurately generate the conclusion for this syllogism. This first example is using greedy search, where our model simply makes a next word prediction based on the our probability distribution over the vocabulary.</p>
 <div class="cell" data-execution_count="98">
 <div class="sourceCode cell-code" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1">output_beam <span class="op" style="color: #5E5E5E;">=</span> model.generate(input_ids, max_length<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">25</span>, num_beams<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">5</span>)</span>
 <span id="cb30-2">tokenizer.decode(output_beam[<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
