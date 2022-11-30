@@ -10,7 +10,402 @@
 <atom:link href="https://jakegehri.github.io/projects.xml" rel="self" type="application/rss+xml"/>
 <description></description>
 <generator>quarto-1.2.242</generator>
-<lastBuildDate>Sun, 27 Nov 2022 05:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 29 Nov 2022 05:00:00 GMT</lastBuildDate>
+<item>
+  <title>Syllogism Conclusion Generator with GPT-2</title>
+  <dc:creator>Jake Gehri</dc:creator>
+  <link>https://jakegehri.github.io/projects/Syllogism Finisher/conclusion_writer.html</link>
+  <description><![CDATA[ 
+
+
+
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;">import</span> torch</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;">import</span> pandas <span class="im" style="color: #00769E;">as</span> pd</span>
+<span id="cb1-3"><span class="im" style="color: #00769E;">import</span> numpy <span class="im" style="color: #00769E;">as</span> np</span>
+<span id="cb1-4"><span class="im" style="color: #00769E;">from</span> datasets <span class="im" style="color: #00769E;">import</span> load_dataset, Dataset</span>
+<span id="cb1-5"><span class="im" style="color: #00769E;">from</span> transformers <span class="im" style="color: #00769E;">import</span> GPT2Tokenizer, GPT2LMHeadModel</span>
+<span id="cb1-6"><span class="im" style="color: #00769E;">from</span> transformers <span class="im" style="color: #00769E;">import</span> TrainingArguments, Trainer, DataCollatorForLanguageModeling</span></code></pre></div>
+</div>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>This notebook will be an extension of the last notebook that was working to classify whether two premises could be used to generate a valid conclusion. That model used the a BERT architecture and was fine-tuned on the Avicenna syllogism dataset. This notebook will use the same dataset, but instead fine-tune a GPT-2 model to take in two premises as input and generate the corresponding conclusion.</p>
+<p>I had to write custome start, end and pad tokens in order to properly pad each input as to be forced to randomly chop up syllogisms into pieced and create input blocks of equal size.</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">device <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'cuda'</span> <span class="cf" style="color: #003B4F;">if</span> torch.cuda.is_available() <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">'cpu'</span></span>
+<span id="cb2-2">file_name <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'Avicenna_Train.csv'</span></span>
+<span id="cb2-3">model_cp <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">"gpt2"</span></span>
+<span id="cb2-4">max_length <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">200</span></span>
+<span id="cb2-5">tokenizer <span class="op" style="color: #5E5E5E;">=</span> GPT2Tokenizer.from_pretrained(model_cp, bos_token <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'&lt;startoftext&gt;'</span>, </span>
+<span id="cb2-6">                                          eos_token<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'&lt;endoftext&gt;'</span>, pad_token<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'&lt;pad&gt;'</span>)</span>
+<span id="cb2-7">data_collator <span class="op" style="color: #5E5E5E;">=</span> DataCollatorForLanguageModeling(tokenizer, mlm<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">False</span>, return_tensors<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'pt'</span>)</span>
+<span id="cb2-8">model <span class="op" style="color: #5E5E5E;">=</span> GPT2LMHeadModel.from_pretrained(model_cp).to(device)</span>
+<span id="cb2-9">model.resize_token_embeddings(<span class="bu" style="color: null;">len</span>(tokenizer))</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"255d8effb8d945c6965a214a72620efe","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"8b689146ce2e43259e7f8816ebfb6af9","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"be4cab5f774a457d8608823a23001366","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"16b103ab121e4abbb48c049bbd66a6db","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<pre><code>Embedding(50260, 768)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;">def</span> tokenize(batch):</span>
+<span id="cb5-2">    <span class="cf" style="color: #003B4F;">return</span> tokenizer(batch[<span class="st" style="color: #20794D;">'text'</span>], truncation<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, max_length<span class="op" style="color: #5E5E5E;">=</span>max_length, padding<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'max_length'</span>)</span></code></pre></div>
+</div>
+<p>The data came in a csv file containing premise 1, premise 2, validity and conclusion. I needed to filter the dataset removing all invalid syllogisms and then combine the premises and conclusions into a single string for fine-tuning. I found out that telling the model which premise was which and where the conclusion started improved training. Additionally, adding a $ after the last premise slightly imporved training, but this was moreso done to replicate what as done in the original GPT paper.</p>
+<div class="cell" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="kw" style="color: #003B4F;">def</span> prepare_dataset(file_name):</span>
+<span id="cb6-2">    dataset <span class="op" style="color: #5E5E5E;">=</span> load_dataset(<span class="st" style="color: #20794D;">'csv'</span>, data_files<span class="op" style="color: #5E5E5E;">=</span>file_name, sep <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">','</span>, encoding <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'ISO-8859-1'</span>)</span>
+<span id="cb6-3">    dataset.set_format(<span class="bu" style="color: null;">type</span><span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'pandas'</span>)</span>
+<span id="cb6-4">    df <span class="op" style="color: #5E5E5E;">=</span> dataset[<span class="st" style="color: #20794D;">'train'</span>][:]</span>
+<span id="cb6-5">    df <span class="op" style="color: #5E5E5E;">=</span> df[df[<span class="st" style="color: #20794D;">'Syllogistic relation'</span>] <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'yes'</span>]</span>
+<span id="cb6-6">    df[<span class="st" style="color: #20794D;">'text'</span>] <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'&lt;startoftext&gt;'</span> <span class="op" style="color: #5E5E5E;">+</span> <span class="st" style="color: #20794D;">'Premise 1: '</span> <span class="op" style="color: #5E5E5E;">+</span> df[<span class="st" style="color: #20794D;">'Premise 1'</span>] <span class="op" style="color: #5E5E5E;">+</span> <span class="st" style="color: #20794D;">'Premise 2:'</span> <span class="op" style="color: #5E5E5E;">+</span> df[<span class="st" style="color: #20794D;">'Premise 2'</span>] <span class="op" style="color: #5E5E5E;">+</span> <span class="st" style="color: #20794D;">'$'</span> <span class="op" style="color: #5E5E5E;">+</span> <span class="st" style="color: #20794D;">'Conclusion:'</span> <span class="op" style="color: #5E5E5E;">+</span> df[<span class="st" style="color: #20794D;">'Conclusion'</span>] <span class="op" style="color: #5E5E5E;">+</span> <span class="st" style="color: #20794D;">'&lt;endoftext&gt;'</span></span>
+<span id="cb6-7">    df.reset_index(drop<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, inplace<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>)</span>
+<span id="cb6-8">    df <span class="op" style="color: #5E5E5E;">=</span> df[[<span class="st" style="color: #20794D;">'text'</span>]]</span>
+<span id="cb6-9">    dataset <span class="op" style="color: #5E5E5E;">=</span> Dataset.from_pandas(df)</span>
+<span id="cb6-10">    dataset <span class="op" style="color: #5E5E5E;">=</span> dataset.<span class="bu" style="color: null;">map</span>(tokenize, batched<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, num_proc<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">4</span>, remove_columns<span class="op" style="color: #5E5E5E;">=</span>[<span class="st" style="color: #20794D;">"text"</span>])</span>
+<span id="cb6-11">    <span class="cf" style="color: #003B4F;">return</span> dataset</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="40">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">train_dataset <span class="op" style="color: #5E5E5E;">=</span> prepare_dataset(<span class="st" style="color: #20794D;">'Avicenna_Train.csv'</span>)</span>
+<span id="cb7-2">test_dataset <span class="op" style="color: #5E5E5E;">=</span> prepare_dataset(<span class="st" style="color: #20794D;">'Avicenna_Test.csv'</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Using custom data configuration default-9e35c2288d530357
+Reusing dataset csv (/root/.cache/huggingface/datasets/csv/default-9e35c2288d530357/0.0.0/51cce309a08df9c4d82ffd9363bbe090bf173197fc01a71b034e8594995a1a58)</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"b2b5bb41dd5b49f0988b2204bd1a751d","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       </code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1206f18026244e6093596c5213272a1c","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"140fbce558d843f4a09c6f24019c9762","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> </code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"0db6c5fc150d46dd93240e153414e576","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"7fbf3b0566364421809a41a495e6b2af","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Using custom data configuration default-80959f65edc13f7a
+Reusing dataset csv (/root/.cache/huggingface/datasets/csv/default-80959f65edc13f7a/0.0.0/51cce309a08df9c4d82ffd9363bbe090bf173197fc01a71b034e8594995a1a58)</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ec743c282bb84dc0872e6461014edbe5","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        </code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"fd2cc281914d454fa5b9f4103c4a0460","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"caecf74dec534c278bdc66c4ccd7f02b","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"d0a2302ba5944aa6872be398266c2c55","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"dc13db456ed6430abe86da7dd206c87d","version_major":2,"version_minor":0}
+</script>
+</div>
+</div>
+<div class="cell" data-execution_count="78">
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1">tokenizer.decode(train_dataset[<span class="st" style="color: #20794D;">'input_ids'</span>][<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="78">
+<pre><code>'&lt;startoftext&gt; Premise 1: Chronic diseases are heart attacks and stroke, cancer such as breast and colon cancer, diabetes, epilepsy and seizures, obesity, and oral health problems.Premise 2:In populations that eat a regular high-fiber diet of more than 50 grams of fiber per dayTrusted Source, like rural South Africans, chronic diseases are very low.$Conclusion:In populations that eat a regular high-fiber diet of more than 50 grams of fiber per dayTrusted Source, like rural South Africans, heart attacks and stroke, cancer such as breast and colon cancer, diabetes, epilepsy and seizures, obesity, and oral health problems are very low. &lt;endoftext&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt; &lt;pad&gt;'</code></pre>
+</div>
+</div>
+</section>
+<section id="training" class="level1">
+<h1>Training</h1>
+<div class="cell" data-execution_count="41">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1">model_name <span class="op" style="color: #5E5E5E;">=</span> model_cp.split(<span class="st" style="color: #20794D;">"/"</span>)[<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>]</span>
+<span id="cb15-2">training_args <span class="op" style="color: #5E5E5E;">=</span> TrainingArguments(</span>
+<span id="cb15-3">    <span class="ss" style="color: #20794D;">f"</span><span class="sc" style="color: #5E5E5E;">{</span>model_cp<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;">-finetuned-syllogism"</span>,</span>
+<span id="cb15-4">    evaluation_strategy <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">"epoch"</span>,</span>
+<span id="cb15-5">    learning_rate<span class="op" style="color: #5E5E5E;">=</span><span class="fl" style="color: #AD0000;">2e-5</span>,</span>
+<span id="cb15-6">    weight_decay<span class="op" style="color: #5E5E5E;">=</span><span class="fl" style="color: #AD0000;">0.01</span>,</span>
+<span id="cb15-7">    push_to_hub<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">False</span>,</span>
+<span id="cb15-8">)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>PyTorch: setting up devices
+The default value for the training argument `--report_to` will change in v5 (from all installed integrations to none). In v5, you will need to use `--report_to all` to get the same behavior as now. You should start updating your code and make this info disappear :-).</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">trainer <span class="op" style="color: #5E5E5E;">=</span> Trainer(</span>
+<span id="cb17-2">    model<span class="op" style="color: #5E5E5E;">=</span>model,</span>
+<span id="cb17-3">    args<span class="op" style="color: #5E5E5E;">=</span>training_args,</span>
+<span id="cb17-4">    train_dataset<span class="op" style="color: #5E5E5E;">=</span>train_dataset,</span>
+<span id="cb17-5">    eval_dataset<span class="op" style="color: #5E5E5E;">=</span>test_dataset,</span>
+<span id="cb17-6">    data_collator<span class="op" style="color: #5E5E5E;">=</span>data_collator</span>
+<span id="cb17-7">)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1">trainer.train()</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/usr/local/lib/python3.9/dist-packages/transformers/optimization.py:306: FutureWarning: This implementation of AdamW is deprecated and will be removed in a future version. Use the PyTorch implementation torch.optim.AdamW instead, or set `no_deprecation_warning=True` to disable this warning
+  warnings.warn(
+***** Running training *****
+  Num examples = 2427
+  Num Epochs = 3
+  Instantaneous batch size per device = 8
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 8
+  Gradient Accumulation steps = 1
+  Total optimization steps = 912</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+
+
+    <div>
+      
+      <progress value="912" max="912" style="width:300px; height:20px; vertical-align: middle;"></progress>
+      [912/912 04:18, Epoch 3/3]
+    </div>
+    <table class="dataframe table table-sm table-striped">
+  <thead>
+ <tr>
+      <th>Epoch</th>
+      <th>Training Loss</th>
+      <th>Validation Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>No log</td>
+      <td>2.311477</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>2.267000</td>
+      <td>2.312688</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>2.267000</td>
+      <td>2.314481</td>
+    </tr>
+  </tbody>
+</table><p>
+</p></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>***** Running Evaluation *****
+  Num examples = 630
+  Batch size = 8
+Saving model checkpoint to gpt2-finetuned-syllogism/checkpoint-500
+Configuration saved in gpt2-finetuned-syllogism/checkpoint-500/config.json
+Model weights saved in gpt2-finetuned-syllogism/checkpoint-500/pytorch_model.bin
+***** Running Evaluation *****
+  Num examples = 630
+  Batch size = 8
+***** Running Evaluation *****
+  Num examples = 630
+  Batch size = 8
+
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
+
+</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="43">
+<pre><code>TrainOutput(global_step=912, training_loss=2.215385637785259, metrics={'train_runtime': 258.8719, 'train_samples_per_second': 28.126, 'train_steps_per_second': 3.523, 'total_flos': 743151283200000.0, 'train_loss': 2.215385637785259, 'epoch': 3.0})</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><span class="im" style="color: #00769E;">import</span> math</span>
+<span id="cb22-2">eval_results <span class="op" style="color: #5E5E5E;">=</span> trainer.evaluate()</span>
+<span id="cb22-3"><span class="bu" style="color: null;">print</span>(<span class="ss" style="color: #20794D;">f"Perplexity: </span><span class="sc" style="color: #5E5E5E;">{</span>math<span class="sc" style="color: #5E5E5E;">.</span>exp(eval_results[<span class="st" style="color: #20794D;">'eval_loss'</span>])<span class="sc" style="color: #5E5E5E;">:.2f}</span><span class="ss" style="color: #20794D;">"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>***** Running Evaluation *****
+  Num examples = 630
+  Batch size = 8</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+
+    <div>
+      
+      <progress value="79" max="79" style="width:300px; height:20px; vertical-align: middle;"></progress>
+      [79/79 00:05]
+    </div>
+    
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Perplexity: 10.12</code></pre>
+</div>
+</div>
+</section>
+<section id="testing" class="level1">
+<h1>Testing</h1>
+<p>First a classic example</p>
+<div class="cell" data-execution_count="95">
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1">test <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'Premise 1: All men are mortal. Premise 2: Socrates is a man. $ Conclusion: '</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="96">
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1">input_ids <span class="op" style="color: #5E5E5E;">=</span> tokenizer(test, return_tensors<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'pt'</span>)[<span class="st" style="color: #20794D;">'input_ids'</span>].to(device)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="97">
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1">output_greedy <span class="op" style="color: #5E5E5E;">=</span> model.generate(input_ids, max_length<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">25</span>)</span>
+<span id="cb27-2">tokenizer.decode(output_greedy[<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="97">
+<pre><code>'Premise 1: All men are mortal. Premise 2: Socrates is a man. $ Conclusion:  Socrates is mortal'</code></pre>
+</div>
+</div>
+<p>I dont know why it is generating this red box error, I believe it has something to do with me changing the models innate tokens in the beginning. Byt we can see that the model was able to accurately generate the conclusion for this syllogism. This first example is using greedy search, where our model simply makes predictions based on the most likely next word.</p>
+<div class="cell" data-execution_count="98">
+<div class="sourceCode cell-code" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1">output_beam <span class="op" style="color: #5E5E5E;">=</span> model.generate(input_ids, max_length<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">25</span>, num_beams<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">5</span>)</span>
+<span id="cb30-2">tokenizer.decode(output_beam[<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="98">
+<pre><code>'Premise 1: All men are mortal. Premise 2: Socrates is a man. $ Conclusion:  Socrates is mortal'</code></pre>
+</div>
+</div>
+<p>Beam search is when the model generates n number of beams (in this case 5) and then selects tokens in order to minimize a loss function. This model also looks good. Beam will usually outperform greedy.</p>
+</section>
+<section id="the-end" class="level1">
+<h1>The End</h1>
+<p>See below for more tests and search methods.</p>
+<div class="cell" data-execution_count="99">
+<div class="sourceCode cell-code" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1">output_temp <span class="op" style="color: #5E5E5E;">=</span> model.generate(input_ids, max_length<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">25</span>, do_sample<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, temperature <span class="op" style="color: #5E5E5E;">=</span> <span class="fl" style="color: #AD0000;">0.5</span>)</span>
+<span id="cb33-2">tokenizer.decode(output_temp[<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="99">
+<pre><code>'Premise 1: All men are mortal. Premise 2: Socrates is a man. $ Conclusion:  Socrates is mortal'</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="100">
+<div class="sourceCode cell-code" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1">output_topk <span class="op" style="color: #5E5E5E;">=</span> model.generate(input_ids, max_length<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">25</span>, do_sample<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, top_k<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">50</span>)</span>
+<span id="cb36-2">tokenizer.decode(output_topk[<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="100">
+<pre><code>'Premise 1: All men are mortal. Premise 2: Socrates is a man. $ Conclusion:  Socrates is a'</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="101">
+<div class="sourceCode cell-code" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1">output_topp <span class="op" style="color: #5E5E5E;">=</span> model.generate(input_ids, max_length<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">25</span>, do_sample<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, top_p<span class="op" style="color: #5E5E5E;">=</span><span class="fl" style="color: #AD0000;">0.90</span>)</span>
+<span id="cb39-2">tokenizer.decode(output_topp[<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="101">
+<pre><code>'Premise 1: All men are mortal. Premise 2: Socrates is a man. $ Conclusion:  Socrates is mortal'</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="91">
+<div class="sourceCode cell-code" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1">test2 <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'Premise 1: All mammals are animals. Premise 2: All elephants are mammals. $ Conclusion: '</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="92">
+<div class="sourceCode cell-code" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1">input_ids <span class="op" style="color: #5E5E5E;">=</span> tokenizer(test2, return_tensors<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'pt'</span>)[<span class="st" style="color: #20794D;">'input_ids'</span>].to(device)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="93">
+<div class="sourceCode cell-code" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1">output_greedy <span class="op" style="color: #5E5E5E;">=</span> model.generate(input_ids, max_length <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">50</span>)</span>
+<span id="cb44-2">tokenizer.decode(output_greedy[<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="93">
+<pre><code>'Premise 1: All mammals are animals. Premise 2: All elephants are mammals. $ Conclusion:  All elephants are animals. &lt;endoftext&gt;                       '</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="94">
+<div class="sourceCode cell-code" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1">output_beam <span class="op" style="color: #5E5E5E;">=</span> model.generate(input_ids, max_length <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">50</span>, num_beams<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">5</span>)</span>
+<span id="cb47-2">tokenizer.decode(output_beam[<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="94">
+<pre><code>'Premise 1: All mammals are animals. Premise 2: All elephants are mammals. $ Conclusion:  All elephants are animals. &lt;endoftext&gt;                       '</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="90">
+<div class="sourceCode cell-code" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1">test3 <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'Premise 1: All mammals are warm-blooded. Premise 2: All black dogs are mammals. $ Conclusion: '</span></span>
+<span id="cb50-2">input_ids <span class="op" style="color: #5E5E5E;">=</span> tokenizer(test3, return_tensors<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'pt'</span>)[<span class="st" style="color: #20794D;">'input_ids'</span>].to(device)</span>
+<span id="cb50-3">output_beam <span class="op" style="color: #5E5E5E;">=</span> model.generate(input_ids, max_length<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">40</span>, num_beams <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">5</span>)</span>
+<span id="cb50-4">tokenizer.decode(output_beam[<span class="dv" style="color: #AD0000;">0</span>])</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Setting `pad_token_id` to `eos_token_id`:50256 for open-end generation.</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="90">
+<pre><code>'Premise 1: All mammals are warm-blooded. Premise 2: All black dogs are mammals. $ Conclusion:  All black dogs are warm-blooded. &lt;endoftext&gt;   &lt;endoftext&gt;  animal is warm-'</code></pre>
+</div>
+</div>
+
+
+</section>
+
+ ]]></description>
+  <category>Python</category>
+  <category>Deep Learning</category>
+  <category>NLP</category>
+  <guid>https://jakegehri.github.io/projects/Syllogism Finisher/conclusion_writer.html</guid>
+  <pubDate>Tue, 29 Nov 2022 05:00:00 GMT</pubDate>
+  <media:content url="https://jakegehri.github.io/projects/Syllogism Finisher/syllogism_conclusion.jpeg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>Syllogism Validation with BERT</title>
   <dc:creator>Jake Gehri</dc:creator>
