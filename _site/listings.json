@@ -2,6 +2,7 @@
   {
     "listing": "/projects.html",
     "items": [
+      "/projects/Stable Diffusion/stable-diffusion-from-scratch.html",
       "/projects/Syllogism Finisher/conclusion_writer.html",
       "/projects/Syllogism Classification/syllogism_classification.html",
       "/projects/Counting Cards/counting_cards.html",
