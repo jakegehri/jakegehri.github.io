@@ -2,46 +2,50 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://jakegehri.github.io/projects/Counting Cards/counting_cards.html</loc>
-    <lastmod>2022-11-30T00:52:18.221Z</lastmod>
+    <lastmod>2022-12-07T01:51:13.890Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/Syllogism Classification/syllogism_classification.html</loc>
-    <lastmod>2022-11-30T00:52:18.810Z</lastmod>
+    <lastmod>2022-12-07T01:51:14.347Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/Amazon/amazon.html</loc>
-    <lastmod>2022-11-30T00:52:19.445Z</lastmod>
+    <lastmod>2022-12-07T01:51:14.943Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/Twitter Bot/model.html</loc>
-    <lastmod>2022-11-30T00:52:19.995Z</lastmod>
+    <lastmod>2022-12-07T01:51:15.616Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/Syllogism Finisher/conclusion_writer.html</loc>
-    <lastmod>2022-11-30T00:52:20.475Z</lastmod>
+    <lastmod>2022-12-07T01:51:16.159Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/DNN From Scratch/no_hands.html</loc>
-    <lastmod>2022-11-30T00:52:20.910Z</lastmod>
+    <lastmod>2022-12-07T01:51:16.603Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/Trailcam/trailcam_model.html</loc>
-    <lastmod>2022-11-30T00:52:21.375Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jakegehri.github.io/projects.html</loc>
-    <lastmod>2022-12-07T01:50:27.241Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jakegehri.github.io/index.html</loc>
-    <lastmod>2022-12-07T01:50:24.109Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jakegehri.github.io/blog.html</loc>
-    <lastmod>2022-11-30T00:52:22.543Z</lastmod>
+    <lastmod>2022-12-07T01:51:17.093Z</lastmod>
   </url>
   <url>
     <loc>https://jakegehri.github.io/projects/Stable Diffusion/stable-diffusion-from-scratch.html</loc>
-    <lastmod>2022-12-07T01:50:13.574Z</lastmod>
+    <lastmod>2022-12-07T01:51:17.580Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jakegehri.github.io/projects.html</loc>
+    <lastmod>2022-12-10T01:31:54.013Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jakegehri.github.io/index.html</loc>
+    <lastmod>2022-12-10T01:31:49.886Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jakegehri.github.io/blog.html</loc>
+    <lastmod>2022-12-07T01:51:18.756Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jakegehri.github.io/projects/ViT/vision-transformer.html</loc>
+    <lastmod>2022-12-10T01:32:13.830Z</lastmod>
   </url>
 </urlset>
