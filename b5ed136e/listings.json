@@ -1,0 +1,38 @@
+[
+  {
+    "listing": "/projects.html",
+    "items": [
+      "/projects/VAE/vae.html",
+      "/projects/ViT/vision-transformer.html",
+      "/projects/Stable Diffusion/stable-diffusion-from-scratch.html",
+      "/projects/Syllogism Finisher/conclusion_writer.html",
+      "/projects/Syllogism Classification/syllogism_classification.html",
+      "/projects/Counting Cards/counting_cards.html",
+      "/projects/DNN From Scratch/no_hands.html",
+      "/9fa22bd8/projects/DNN From Scratch/no_hands.html",
+      "/projects/Amazon/amazon.html",
+      "/9fa22bd8/projects/Amazon/amazon.html",
+      "/projects/Trailcam/trailcam_model.html",
+      "/9fa22bd8/projects/Trailcam/trailcam_model.html",
+      "/projects/Twitter Bot/model.html",
+      "/9fa22bd8/projects/Twitter Bot/model.html"
+    ]
+  },
+  {
+    "listing": "/9fa22bd8/projects.html",
+    "items": [
+      "/9fa22bd8/projects/DNN From Scratch/no_hands.html",
+      "/9fa22bd8/projects/Amazon/amazon.html",
+      "/9fa22bd8/projects/Trailcam/trailcam_model.html",
+      "/9fa22bd8/projects/Twitter Bot/model.html"
+    ]
+  },
+  {
+    "listing": "/9fa22bd8/blog.html",
+    "items": []
+  },
+  {
+    "listing": "/blog.html",
+    "items": []
+  }
+]
