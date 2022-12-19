@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.242">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jake Gehri">
+<meta name="dcterms.date" content="2022-12-19">
+<meta name="description" content="Part 1 of 3 in a series exploring generative models.">
+
+<title>Jake Gehri - Variational Autoencoder</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+<script src="https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jake Gehri</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../projects.html">
+ <span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#load-and-prepare-data" id="toc-load-and-prepare-data" class="nav-link active" data-scroll-target="#load-and-prepare-data">Load and prepare data</a></li>
+  <li><a href="#build-autoencoder" id="toc-build-autoencoder" class="nav-link" data-scroll-target="#build-autoencoder">Build Autoencoder</a></li>
+  <li><a href="#beta---variational-autoencoder" id="toc-beta---variational-autoencoder" class="nav-link" data-scroll-target="#beta---variational-autoencoder">Beta - Variational Autoencoder</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Variational Autoencoder</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">Python</div>
+    <div class="quarto-category">Deep Learning</div>
+    <div class="quarto-category">NLP</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    <p>Part 1 of 3 in a series exploring generative models.</p>
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jake Gehri </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 19, 2022</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> nn</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> Dataset, DataLoader</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> PIL <span class="im">import</span> Image</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> glob</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> ToTensor, PILToTensor</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.io <span class="im">import</span> read_image</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision <span class="im">import</span> datasets, transforms</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.utils <span class="im">import</span> make_grid</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.datasets <span class="im">import</span> ImageFolder</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tqdm.auto <span class="im">import</span> tqdm</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.colors <span class="im">as</span> mcolors</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchinfo <span class="im">import</span> summary</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="102">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>creds <span class="op">=</span> <span class="st">'{"username":"jakegehri","key":"41ff660454233a25221965d475c8d92b"}'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="103">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>cred_path <span class="op">=</span> Path(<span class="st">'~/.kaggle/kaggle.json'</span>).expanduser() </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> cred_path.exists():</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    cred_path.parent.mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    cred_path.write_text(creds)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    cred_path.chmod(<span class="bn">0o600</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="104">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> kaggle</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>DEVICE <span class="op">=</span> <span class="st">'cuda'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="load-and-prepare-data" class="level1">
+<h1>Load and prepare data</h1>
+<div class="cell" data-execution_count="169">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>transform <span class="op">=</span> transforms.Compose([transforms.Grayscale(num_output_channels<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                                transforms.Resize(<span class="dv">64</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                                transforms.CenterCrop(<span class="dv">64</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                                transforms.ToTensor()])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="170">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> ImageFolder(root <span class="op">=</span> <span class="st">'shapes'</span>, transform<span class="op">=</span>transform)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="171">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dataset[<span class="dv">0</span>][<span class="dv">0</span>].shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="171">
+<pre><code>torch.Size([1, 64, 64])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="180">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>plt.imshow(dataset[<span class="dv">0</span>][<span class="dv">0</span>].squeeze(<span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="180">
+<pre><code>&lt;matplotlib.image.AxesImage at 0x7fa2724ef670&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-10-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="181">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>batch_size <span class="op">=</span> <span class="dv">32</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="182">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dataloader <span class="op">=</span> DataLoader(dataset, batch_size<span class="op">=</span>batch_size, shuffle<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="183">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_images(images, nmax<span class="op">=</span><span class="dv">64</span>):</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">8</span>))</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    ax.set_xticks([])<span class="op">;</span> ax.set_yticks([])</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    ax.imshow(make_grid((images.detach()[:nmax]), nrow<span class="op">=</span><span class="dv">8</span>).permute(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>))</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_batch(dl, nmax<span class="op">=</span><span class="dv">64</span>):</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> images <span class="kw">in</span> dl:</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        show_images(images[<span class="dv">0</span>], nmax)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="184">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>show_batch(dataloader)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-14-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="build-autoencoder" class="level1">
+<h1>Build Autoencoder</h1>
+<div class="cell" data-execution_count="187">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Encoder(nn.Module):</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.encoder <span class="op">=</span> nn.Sequential(</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">1</span>, <span class="dv">32</span>, stride<span class="op">=</span><span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>), <span class="co"># 64 -&gt; 32</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">32</span>, <span class="dv">32</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">32</span>, <span class="dv">32</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">32</span>, <span class="dv">64</span>, stride<span class="op">=</span><span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>), <span class="co"># 32 -&gt; 16</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">64</span>, <span class="dv">64</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">64</span>, <span class="dv">64</span>, stride<span class="op">=</span><span class="dv">2</span> ,kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>), <span class="co">#16 -&gt; 8</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>                nn.Flatten(),</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>                nn.Linear(<span class="dv">4096</span>, <span class="dv">2</span>)</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.encoder(x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="188">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> <span class="bu">next</span>(<span class="bu">iter</span>(dataloader))[<span class="dv">0</span>]</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>enc <span class="op">=</span> Encoder()</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> enc(X)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>X.shape, z.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="188">
+<pre><code>(torch.Size([32, 1, 64, 64]), torch.Size([32, 2]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="189">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Reshape(nn.Module):</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, <span class="op">*</span>args):</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.shape <span class="op">=</span> args</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x.view(<span class="va">self</span>.shape)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="190">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Trim(nn.Module):</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, <span class="op">*</span>args):</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x[:, :, :<span class="dv">64</span>, :<span class="dv">64</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="191">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Decoder(nn.Module):</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.linear <span class="op">=</span> nn.Sequential(</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>                nn.Linear(<span class="dv">2</span>, <span class="dv">4096</span>),</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.01</span>),</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.decoder <span class="op">=</span> nn.Sequential(</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">64</span>, <span class="dv">64</span>, stride<span class="op">=</span><span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>, output_padding<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">64</span>, <span class="dv">64</span>, stride<span class="op">=</span><span class="dv">1</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),               </span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">64</span>, <span class="dv">32</span>, stride<span class="op">=</span><span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>, output_padding<span class="op">=</span><span class="dv">1</span>),                </span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">32</span>, <span class="dv">32</span>, stride<span class="op">=</span><span class="dv">1</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),     </span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">32</span>, <span class="dv">32</span>, stride<span class="op">=</span><span class="dv">1</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),     </span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">32</span>, <span class="dv">1</span>, stride <span class="op">=</span> <span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>, output_padding<span class="op">=</span><span class="dv">1</span>), </span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>                Trim(),</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>                nn.Sigmoid()</span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, z):</span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>        z <span class="op">=</span> <span class="va">self</span>.linear(z)</span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>        z <span class="op">=</span> torch.reshape(z, (<span class="op">-</span><span class="dv">1</span>, <span class="dv">64</span>, <span class="dv">8</span>, <span class="dv">8</span>))</span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>        z <span class="op">=</span> <span class="va">self</span>.decoder(z)</span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> z</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="192">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>decoder <span class="op">=</span> Decoder()</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>X_prime <span class="op">=</span> decoder(z)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="193">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>X.shape, X_prime.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="193">
+<pre><code>(torch.Size([32, 1, 64, 64]), torch.Size([32, 1, 64, 64]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="194">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>plt.imshow(X_prime[<span class="dv">0</span>].cpu().permute(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>).detach().numpy())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="194">
+<pre><code>&lt;matplotlib.image.AxesImage at 0x7fa272323670&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-22-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="195">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Autoencoder(nn.Module):</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.encoder <span class="op">=</span> Encoder()</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.decoder <span class="op">=</span> Decoder()</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.decoder(<span class="va">self</span>.encoder(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="196">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>ae <span class="op">=</span> Autoencoder().to(DEVICE)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>loss_fn <span class="op">=</span> F.mse_loss</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> torch.optim.Adam(params<span class="op">=</span>ae.parameters(), lr<span class="op">=</span><span class="fl">0.0005</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="197">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>summary(ae, (batch_size, <span class="dv">1</span>, <span class="dv">64</span>, <span class="dv">64</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="197">
+<pre><code>==========================================================================================
+Layer (type:depth-idx)                   Output Shape              Param #
+==========================================================================================
+Autoencoder                              [32, 1, 64, 64]           --
+├─Encoder: 1-1                           [32, 2]                   --
+│    └─Sequential: 2-1                   [32, 2]                   --
+│    │    └─Conv2d: 3-1                  [32, 32, 32, 32]          320
+│    │    └─BatchNorm2d: 3-2             [32, 32, 32, 32]          64
+│    │    └─LeakyReLU: 3-3               [32, 32, 32, 32]          --
+│    │    └─Dropout2d: 3-4               [32, 32, 32, 32]          --
+│    │    └─Conv2d: 3-5                  [32, 32, 32, 32]          9,248
+│    │    └─BatchNorm2d: 3-6             [32, 32, 32, 32]          64
+│    │    └─LeakyReLU: 3-7               [32, 32, 32, 32]          --
+│    │    └─Dropout2d: 3-8               [32, 32, 32, 32]          --
+│    │    └─Conv2d: 3-9                  [32, 32, 32, 32]          9,248
+│    │    └─BatchNorm2d: 3-10            [32, 32, 32, 32]          64
+│    │    └─LeakyReLU: 3-11              [32, 32, 32, 32]          --
+│    │    └─Dropout2d: 3-12              [32, 32, 32, 32]          --
+│    │    └─Conv2d: 3-13                 [32, 64, 16, 16]          18,496
+│    │    └─BatchNorm2d: 3-14            [32, 64, 16, 16]          128
+│    │    └─LeakyReLU: 3-15              [32, 64, 16, 16]          --
+│    │    └─Dropout2d: 3-16              [32, 64, 16, 16]          --
+│    │    └─Conv2d: 3-17                 [32, 64, 16, 16]          36,928
+│    │    └─BatchNorm2d: 3-18            [32, 64, 16, 16]          128
+│    │    └─LeakyReLU: 3-19              [32, 64, 16, 16]          --
+│    │    └─Dropout2d: 3-20              [32, 64, 16, 16]          --
+│    │    └─Conv2d: 3-21                 [32, 64, 8, 8]            36,928
+│    │    └─BatchNorm2d: 3-22            [32, 64, 8, 8]            128
+│    │    └─LeakyReLU: 3-23              [32, 64, 8, 8]            --
+│    │    └─Dropout2d: 3-24              [32, 64, 8, 8]            --
+│    │    └─Flatten: 3-25                [32, 4096]                --
+│    │    └─Linear: 3-26                 [32, 2]                   8,194
+├─Decoder: 1-2                           [32, 1, 64, 64]           --
+│    └─Sequential: 2-2                   [32, 4096]                --
+│    │    └─Linear: 3-27                 [32, 4096]                12,288
+│    │    └─LeakyReLU: 3-28              [32, 4096]                --
+│    └─Sequential: 2-3                   [32, 1, 64, 64]           --
+│    │    └─ConvTranspose2d: 3-29        [32, 64, 16, 16]          36,928
+│    │    └─BatchNorm2d: 3-30            [32, 64, 16, 16]          128
+│    │    └─LeakyReLU: 3-31              [32, 64, 16, 16]          --
+│    │    └─Dropout2d: 3-32              [32, 64, 16, 16]          --
+│    │    └─ConvTranspose2d: 3-33        [32, 64, 16, 16]          36,928
+│    │    └─BatchNorm2d: 3-34            [32, 64, 16, 16]          128
+│    │    └─LeakyReLU: 3-35              [32, 64, 16, 16]          --
+│    │    └─Dropout2d: 3-36              [32, 64, 16, 16]          --
+│    │    └─ConvTranspose2d: 3-37        [32, 32, 32, 32]          18,464
+│    │    └─BatchNorm2d: 3-38            [32, 32, 32, 32]          64
+│    │    └─LeakyReLU: 3-39              [32, 32, 32, 32]          --
+│    │    └─Dropout2d: 3-40              [32, 32, 32, 32]          --
+│    │    └─ConvTranspose2d: 3-41        [32, 32, 32, 32]          9,248
+│    │    └─BatchNorm2d: 3-42            [32, 32, 32, 32]          64
+│    │    └─LeakyReLU: 3-43              [32, 32, 32, 32]          --
+│    │    └─Dropout2d: 3-44              [32, 32, 32, 32]          --
+│    │    └─ConvTranspose2d: 3-45        [32, 32, 32, 32]          9,248
+│    │    └─BatchNorm2d: 3-46            [32, 32, 32, 32]          64
+│    │    └─LeakyReLU: 3-47              [32, 32, 32, 32]          --
+│    │    └─Dropout2d: 3-48              [32, 32, 32, 32]          --
+│    │    └─ConvTranspose2d: 3-49        [32, 1, 64, 64]           289
+│    │    └─Trim: 3-50                   [32, 1, 64, 64]           --
+│    │    └─Sigmoid: 3-51                [32, 1, 64, 64]           --
+==========================================================================================
+Total params: 243,779
+Trainable params: 243,779
+Non-trainable params: 0
+Total mult-adds (G): 3.00
+==========================================================================================
+Input size (MB): 0.52
+Forward/backward pass size (MB): 138.41
+Params size (MB): 0.98
+Estimated Total Size (MB): 139.91
+==========================================================================================</code></pre>
+</div>
+</div>
+<div class="cell" data-jupyter="{&quot;outputs_hidden&quot;:true}" data-tags="[]" data-execution_count="198">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>epochs <span class="op">=</span> <span class="dv">50</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>outputs <span class="op">=</span> []</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>losses <span class="op">=</span> []</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> tqdm(<span class="bu">range</span>(epochs)):</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> batch, (image, _) <span class="kw">in</span> tqdm(<span class="bu">enumerate</span>(dataloader)):</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>        image <span class="op">=</span> image.to(DEVICE)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>       </span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>        reconstructed <span class="op">=</span> ae(image)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> loss_fn(reconstructed, image, reduction <span class="op">=</span> <span class="st">'none'</span>)</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> loss.view(batch_size, <span class="op">-</span><span class="dv">1</span>).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> loss.mean()</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>       </span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>        optimizer.zero_grad()</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>        loss.backward()</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>        optimizer.step()</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>       </span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>        losses.append(loss.detach().cpu().numpy())</span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>    outputs.append((epoch, image, reconstructed))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"597e5453914e47f89dbf9c91b5c6d7b4","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"7922d00791234711b88da52fb5d8ebda","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"4cfb590b46b246ba9fb901ffa8f3d7a1","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"a1ee579730a7486c96ed106e98d5dc09","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"3fdb6065dc224e218c09f16eccde5185","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"36c4069e1b414aee89ae033dc7aeb4a4","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1ce7195294744aa5b6339ad2548ef3c5","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"b552a2c2ed9741c3a58801005ae5bda9","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"882c5fce7aec4bfcba537f5f016a20ea","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"e7e956892ddd4e61b1e6e1d40b8a4d65","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ff91a1cdafcb40f1a73e2a797ecb737b","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"bb6afbefa57d4d17a49aed4c224d5a81","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"3e92e56a29164a219a774263e19dd52c","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"20dfebaea4d94de9b582a17d5890c1b4","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"aea079a6fb71433fa7a1e854e4d8888a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"c7167d2438d644f284d2992e5e79725c","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"2de1b068ef684623bb4d80c1bf66154e","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"2c74beefad8f4dcfb8e9690e84168fc0","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"f411424735ea49a08391bd46cdd5b1ad","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"a06fc7d0f67e474ab91f5cb2ff4c434c","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"4b9ae396d0ea477c84da3802e4bb573a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"484dc065b7c4499d9f094719b7ba6c3f","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"7676b918c2f64c97a7b310a8a052ee77","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ef50e6e6e6664474916e51ba5a639fec","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"a660b98d63604fd6b7d52825d1413fbf","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"373d1d9a94e84c369ef4c02487a5f958","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"d23a1cc0f41a46f7af8bd2c8769ef303","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"adae2b892f68411f9724d213b551fd1f","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"719b4d5a63794e78937ab3fb4503a159","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"deff22b4237a40edb77de75c7c939b5a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"d15f3709a40d49abbcd367af9f3ac193","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"e214aa42eb58463aa5a76e4724e2aeab","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"19f501b828b0483290069b9f4e139d49","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"c3ee38c047214cb4a26a46941d36c6b1","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"32408b5325c8472b8ff9a7b7b42a5c3f","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"064966b75ad94303ae17c58a4d56c2b3","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"743b536ea88148359c662c8fda6e7d3d","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"197b2558175b494e9c290e36d4889f5d","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"9c9c3efc3f8a4f5a969f2e17f5025d5a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"77474a17c6de428c9b564034690cc356","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"37cebadcd75a4bdbbe1f9f098a242ffd","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"2725e92ee50e4bf0ab2a83e98999ca7a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"e843108dae134446b3058ec5b0182cf5","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1aa21a54cd5f45cb99d749fdcdd55bea","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"85238051e9a64bb49dd2bb0fd418ba9a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"2b427a04c82e40d09003da5dd94f647d","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"a23b31430e9544738925bb17c4ff256a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"d3bcf4128f5848c2a4e36f89591365b0","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"92c6a143859f4973abcda9c681e485e6","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"8865d24d7a3c40c780b4274cee4d8909","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"31123d36242448c580c93ae8c70df264","version_major":2,"version_minor":0}
+</script>
+</div>
+</div>
+<div class="cell" data-execution_count="199">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>plt.plot(losses)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-27-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="201">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>plt.imshow(image[<span class="dv">0</span>].reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">64</span>, <span class="dv">64</span>).cpu().permute(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="201">
+<pre><code>&lt;matplotlib.image.AxesImage at 0x7fa265c14a60&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-28-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="202">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>plt.imshow(reconstructed[<span class="dv">0</span>].detach().reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">64</span>, <span class="dv">64</span>).cpu().permute(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="202">
+<pre><code>&lt;matplotlib.image.AxesImage at 0x7fa265bd6340&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-29-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="236">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_latent_space_with_labels(num_classes, dataloader, model, device):</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> {i:[] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_classes)}</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, (features, targets) <span class="kw">in</span> <span class="bu">enumerate</span>(dataloader):</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>            features <span class="op">=</span> features.to(device)</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>            targets <span class="op">=</span> targets.to(device)</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>            embedding <span class="op">=</span> model.encoder(features)</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_classes):</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> i <span class="kw">in</span> targets:</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>                    mask <span class="op">=</span> targets <span class="op">==</span> i</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>                    d[i].append(embedding[mask].to(<span class="st">'cpu'</span>).numpy())</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>    colors <span class="op">=</span> <span class="bu">list</span>(mcolors.TABLEAU_COLORS.items())</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_classes):</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>        d[i] <span class="op">=</span> np.concatenate(d[i])</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>        plt.scatter(</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>            d[i][:, <span class="dv">0</span>], d[i][:, <span class="dv">1</span>],</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>            color<span class="op">=</span>colors[i][<span class="dv">1</span>],</span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>            label<span class="op">=</span><span class="ss">f'</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">'</span>,</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>            alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>    plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="237">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>plot_latent_space_with_labels(</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    num_classes<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    dataloader<span class="op">=</span>dataloader,</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>ae, </span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    device<span class="op">=</span>DEVICE)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-31-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="beta---variational-autoencoder" class="level1">
+<h1>Beta - Variational Autoencoder</h1>
+<div class="cell" data-execution_count="271">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> VAE(nn.Module):</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.encoder <span class="op">=</span> nn.Sequential(</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">1</span>, <span class="dv">32</span>, stride<span class="op">=</span><span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>), <span class="co"># 64 -&gt; 32</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">32</span>, <span class="dv">32</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">32</span>, <span class="dv">32</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">32</span>, <span class="dv">64</span>, stride<span class="op">=</span><span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>), <span class="co"># 32 -&gt; 16</span></span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">64</span>, <span class="dv">64</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-25"><a href="#cb39-25" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-26"><a href="#cb39-26" aria-hidden="true" tabindex="-1"></a>                nn.Conv2d(<span class="dv">64</span>, <span class="dv">64</span>, stride<span class="op">=</span><span class="dv">2</span> ,kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>), <span class="co">#16 -&gt; 8</span></span>
+<span id="cb39-27"><a href="#cb39-27" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb39-28"><a href="#cb39-28" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-29"><a href="#cb39-29" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-30"><a href="#cb39-30" aria-hidden="true" tabindex="-1"></a>                nn.Flatten(),</span>
+<span id="cb39-31"><a href="#cb39-31" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb39-32"><a href="#cb39-32" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb39-33"><a href="#cb39-33" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.z_mean <span class="op">=</span> nn.Linear(<span class="dv">4096</span>, <span class="dv">2</span>)</span>
+<span id="cb39-34"><a href="#cb39-34" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.z_log_var <span class="op">=</span> nn.Linear(<span class="dv">4096</span>, <span class="dv">2</span>)</span>
+<span id="cb39-35"><a href="#cb39-35" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb39-36"><a href="#cb39-36" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.decoder <span class="op">=</span> nn.Sequential(</span>
+<span id="cb39-37"><a href="#cb39-37" aria-hidden="true" tabindex="-1"></a>                nn.Linear(<span class="dv">2</span>, <span class="dv">4096</span>),</span>
+<span id="cb39-38"><a href="#cb39-38" aria-hidden="true" tabindex="-1"></a>                Reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">64</span>, <span class="dv">8</span>, <span class="dv">8</span>),</span>
+<span id="cb39-39"><a href="#cb39-39" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">64</span>, <span class="dv">64</span>, stride<span class="op">=</span><span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>, output_padding<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb39-40"><a href="#cb39-40" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb39-41"><a href="#cb39-41" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-42"><a href="#cb39-42" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-43"><a href="#cb39-43" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">64</span>, <span class="dv">64</span>, stride<span class="op">=</span><span class="dv">1</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),               </span>
+<span id="cb39-44"><a href="#cb39-44" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">64</span>),</span>
+<span id="cb39-45"><a href="#cb39-45" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-46"><a href="#cb39-46" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-47"><a href="#cb39-47" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">64</span>, <span class="dv">32</span>, stride<span class="op">=</span><span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>, output_padding<span class="op">=</span><span class="dv">1</span>),                </span>
+<span id="cb39-48"><a href="#cb39-48" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb39-49"><a href="#cb39-49" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-50"><a href="#cb39-50" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-51"><a href="#cb39-51" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">32</span>, <span class="dv">32</span>, stride<span class="op">=</span><span class="dv">1</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),     </span>
+<span id="cb39-52"><a href="#cb39-52" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb39-53"><a href="#cb39-53" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-54"><a href="#cb39-54" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-55"><a href="#cb39-55" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">32</span>, <span class="dv">32</span>, stride<span class="op">=</span><span class="dv">1</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>),     </span>
+<span id="cb39-56"><a href="#cb39-56" aria-hidden="true" tabindex="-1"></a>                nn.BatchNorm2d(<span class="dv">32</span>),</span>
+<span id="cb39-57"><a href="#cb39-57" aria-hidden="true" tabindex="-1"></a>                nn.LeakyReLU(<span class="fl">0.1</span>, inplace<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb39-58"><a href="#cb39-58" aria-hidden="true" tabindex="-1"></a>                nn.Dropout2d(<span class="fl">0.25</span>),</span>
+<span id="cb39-59"><a href="#cb39-59" aria-hidden="true" tabindex="-1"></a>                nn.ConvTranspose2d(<span class="dv">32</span>, <span class="dv">1</span>, stride <span class="op">=</span> <span class="dv">2</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>, output_padding<span class="op">=</span><span class="dv">1</span>), </span>
+<span id="cb39-60"><a href="#cb39-60" aria-hidden="true" tabindex="-1"></a>                <span class="co">#Trim(),</span></span>
+<span id="cb39-61"><a href="#cb39-61" aria-hidden="true" tabindex="-1"></a>                nn.Sigmoid()</span>
+<span id="cb39-62"><a href="#cb39-62" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb39-63"><a href="#cb39-63" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb39-64"><a href="#cb39-64" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> reparameterize(<span class="va">self</span>, z_mu, z_log_var):</span>
+<span id="cb39-65"><a href="#cb39-65" aria-hidden="true" tabindex="-1"></a>        eps <span class="op">=</span> torch.randn(z_mu.size(<span class="dv">0</span>), z_mu.size(<span class="dv">1</span>)).to(z_mu.get_device())</span>
+<span id="cb39-66"><a href="#cb39-66" aria-hidden="true" tabindex="-1"></a>        z <span class="op">=</span> z_mu <span class="op">+</span> eps <span class="op">*</span> torch.exp(z_log_var<span class="op">/</span><span class="fl">2.</span>) </span>
+<span id="cb39-67"><a href="#cb39-67" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> z</span>
+<span id="cb39-68"><a href="#cb39-68" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb39-69"><a href="#cb39-69" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> encoding_fn(<span class="va">self</span>, x):</span>
+<span id="cb39-70"><a href="#cb39-70" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.encoder(x)</span>
+<span id="cb39-71"><a href="#cb39-71" aria-hidden="true" tabindex="-1"></a>        z_mean, z_log_var <span class="op">=</span> <span class="va">self</span>.z_mean(x), <span class="va">self</span>.z_log_var(x)</span>
+<span id="cb39-72"><a href="#cb39-72" aria-hidden="true" tabindex="-1"></a>        encoded <span class="op">=</span> <span class="va">self</span>.reparameterize(z_mean, z_log_var)</span>
+<span id="cb39-73"><a href="#cb39-73" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> encoded</span>
+<span id="cb39-74"><a href="#cb39-74" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb39-75"><a href="#cb39-75" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
+<span id="cb39-76"><a href="#cb39-76" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.encoder(x)</span>
+<span id="cb39-77"><a href="#cb39-77" aria-hidden="true" tabindex="-1"></a>        z_mean, z_log_var <span class="op">=</span> <span class="va">self</span>.z_mean(x), <span class="va">self</span>.z_log_var(x)</span>
+<span id="cb39-78"><a href="#cb39-78" aria-hidden="true" tabindex="-1"></a>        encoded <span class="op">=</span> <span class="va">self</span>.reparameterize(z_mean, z_log_var)</span>
+<span id="cb39-79"><a href="#cb39-79" aria-hidden="true" tabindex="-1"></a>        decoded <span class="op">=</span> <span class="va">self</span>.decoder(encoded)</span>
+<span id="cb39-80"><a href="#cb39-80" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> encoded, z_mean, z_log_var, decoded</span>
+<span id="cb39-81"><a href="#cb39-81" aria-hidden="true" tabindex="-1"></a>        </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="272">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>vae <span class="op">=</span> VAE()</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>vae.to(DEVICE)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>reconstruction_loss_fn <span class="op">=</span> F.mse_loss</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> torch.optim.Adam(params<span class="op">=</span>vae.parameters(), lr<span class="op">=</span><span class="fl">0.00005</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="273">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>summary(vae, (<span class="dv">32</span>, <span class="dv">1</span>, <span class="dv">64</span>, <span class="dv">64</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="273">
+<pre><code>==========================================================================================
+Layer (type:depth-idx)                   Output Shape              Param #
+==========================================================================================
+VAE                                      [32, 2]                   --
+├─Sequential: 1-1                        [32, 4096]                --
+│    └─Conv2d: 2-1                       [32, 32, 32, 32]          320
+│    └─BatchNorm2d: 2-2                  [32, 32, 32, 32]          64
+│    └─LeakyReLU: 2-3                    [32, 32, 32, 32]          --
+│    └─Dropout2d: 2-4                    [32, 32, 32, 32]          --
+│    └─Conv2d: 2-5                       [32, 32, 32, 32]          9,248
+│    └─BatchNorm2d: 2-6                  [32, 32, 32, 32]          64
+│    └─LeakyReLU: 2-7                    [32, 32, 32, 32]          --
+│    └─Dropout2d: 2-8                    [32, 32, 32, 32]          --
+│    └─Conv2d: 2-9                       [32, 32, 32, 32]          9,248
+│    └─BatchNorm2d: 2-10                 [32, 32, 32, 32]          64
+│    └─LeakyReLU: 2-11                   [32, 32, 32, 32]          --
+│    └─Dropout2d: 2-12                   [32, 32, 32, 32]          --
+│    └─Conv2d: 2-13                      [32, 64, 16, 16]          18,496
+│    └─BatchNorm2d: 2-14                 [32, 64, 16, 16]          128
+│    └─LeakyReLU: 2-15                   [32, 64, 16, 16]          --
+│    └─Dropout2d: 2-16                   [32, 64, 16, 16]          --
+│    └─Conv2d: 2-17                      [32, 64, 16, 16]          36,928
+│    └─BatchNorm2d: 2-18                 [32, 64, 16, 16]          128
+│    └─LeakyReLU: 2-19                   [32, 64, 16, 16]          --
+│    └─Dropout2d: 2-20                   [32, 64, 16, 16]          --
+│    └─Conv2d: 2-21                      [32, 64, 8, 8]            36,928
+│    └─BatchNorm2d: 2-22                 [32, 64, 8, 8]            128
+│    └─LeakyReLU: 2-23                   [32, 64, 8, 8]            --
+│    └─Dropout2d: 2-24                   [32, 64, 8, 8]            --
+│    └─Flatten: 2-25                     [32, 4096]                --
+├─Linear: 1-2                            [32, 2]                   8,194
+├─Linear: 1-3                            [32, 2]                   8,194
+├─Sequential: 1-4                        [32, 1, 64, 64]           --
+│    └─Linear: 2-26                      [32, 4096]                12,288
+│    └─Reshape: 2-27                     [32, 64, 8, 8]            --
+│    └─ConvTranspose2d: 2-28             [32, 64, 16, 16]          36,928
+│    └─BatchNorm2d: 2-29                 [32, 64, 16, 16]          128
+│    └─LeakyReLU: 2-30                   [32, 64, 16, 16]          --
+│    └─Dropout2d: 2-31                   [32, 64, 16, 16]          --
+│    └─ConvTranspose2d: 2-32             [32, 64, 16, 16]          36,928
+│    └─BatchNorm2d: 2-33                 [32, 64, 16, 16]          128
+│    └─LeakyReLU: 2-34                   [32, 64, 16, 16]          --
+│    └─Dropout2d: 2-35                   [32, 64, 16, 16]          --
+│    └─ConvTranspose2d: 2-36             [32, 32, 32, 32]          18,464
+│    └─BatchNorm2d: 2-37                 [32, 32, 32, 32]          64
+│    └─LeakyReLU: 2-38                   [32, 32, 32, 32]          --
+│    └─Dropout2d: 2-39                   [32, 32, 32, 32]          --
+│    └─ConvTranspose2d: 2-40             [32, 32, 32, 32]          9,248
+│    └─BatchNorm2d: 2-41                 [32, 32, 32, 32]          64
+│    └─LeakyReLU: 2-42                   [32, 32, 32, 32]          --
+│    └─Dropout2d: 2-43                   [32, 32, 32, 32]          --
+│    └─ConvTranspose2d: 2-44             [32, 32, 32, 32]          9,248
+│    └─BatchNorm2d: 2-45                 [32, 32, 32, 32]          64
+│    └─LeakyReLU: 2-46                   [32, 32, 32, 32]          --
+│    └─Dropout2d: 2-47                   [32, 32, 32, 32]          --
+│    └─ConvTranspose2d: 2-48             [32, 1, 64, 64]           289
+│    └─Sigmoid: 2-49                     [32, 1, 64, 64]           --
+==========================================================================================
+Total params: 251,973
+Trainable params: 251,973
+Non-trainable params: 0
+Total mult-adds (G): 3.00
+==========================================================================================
+Input size (MB): 0.52
+Forward/backward pass size (MB): 138.41
+Params size (MB): 1.01
+Estimated Total Size (MB): 139.95
+==========================================================================================</code></pre>
+</div>
+</div>
+<div class="cell" data-jupyter="{&quot;outputs_hidden&quot;:true}" data-tags="[]" data-execution_count="274">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>epochs <span class="op">=</span> <span class="dv">50</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>beta <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>vae_outputs <span class="op">=</span> []</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>combined_losses <span class="op">=</span> []</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>reconstruction_losses <span class="op">=</span> []</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>kl_losses <span class="op">=</span> []</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> tqdm(<span class="bu">range</span>(epochs)):</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> batch, (image, _) <span class="kw">in</span> tqdm(<span class="bu">enumerate</span>(dataloader)):</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>        image <span class="op">=</span> image.to(DEVICE)</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>       </span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>        encoded, z_mean, z_var, decoded <span class="op">=</span> vae(image)</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>        kl_div <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> torch.<span class="bu">sum</span>(<span class="dv">1</span> <span class="op">+</span> z_var <span class="op">-</span> z_mean<span class="op">**</span><span class="dv">2</span> <span class="op">-</span> torch.exp(z_var), axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>        batch_size <span class="op">=</span> kl_div.size(<span class="dv">0</span>)</span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>        kl_div <span class="op">=</span> kl_div.mean()</span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>        reconstruction_loss <span class="op">=</span> reconstruction_loss_fn(decoded, image, reduction <span class="op">=</span> <span class="st">'none'</span>)</span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>        reconstruction_loss <span class="op">=</span> reconstruction_loss.view(batch_size, <span class="op">-</span><span class="dv">1</span>).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a>        reconstruction_loss <span class="op">=</span> reconstruction_loss.mean()</span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> reconstruction_loss <span class="op">+</span> beta<span class="op">*</span>kl_div</span>
+<span id="cb43-24"><a href="#cb43-24" aria-hidden="true" tabindex="-1"></a>       </span>
+<span id="cb43-25"><a href="#cb43-25" aria-hidden="true" tabindex="-1"></a>        optimizer.zero_grad()</span>
+<span id="cb43-26"><a href="#cb43-26" aria-hidden="true" tabindex="-1"></a>        loss.backward()</span>
+<span id="cb43-27"><a href="#cb43-27" aria-hidden="true" tabindex="-1"></a>        optimizer.step()</span>
+<span id="cb43-28"><a href="#cb43-28" aria-hidden="true" tabindex="-1"></a>        combined_losses.append(loss.detach().cpu().numpy())</span>
+<span id="cb43-29"><a href="#cb43-29" aria-hidden="true" tabindex="-1"></a>        reconstruction_losses.append(reconstruction_loss.detach().cpu().numpy())</span>
+<span id="cb43-30"><a href="#cb43-30" aria-hidden="true" tabindex="-1"></a>        kl_losses.append(kl_div.detach().cpu().numpy())</span>
+<span id="cb43-31"><a href="#cb43-31" aria-hidden="true" tabindex="-1"></a>    vae_outputs.append((epoch, image, decoded))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"cda8fe939bf54373a10d035a260a7172","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"8147544b484f4f3fbe0b39e106aa2d16","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"21f77ff3ed2d4aefb24d8f121ca86f7b","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"10bb3aca1f6e42238638f2a353c1fdac","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"6ffcf3eb7cdd4cc5b2710b6e8e0b600e","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"36c3f3c79cc44291be8ed6520d8b46de","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"73fcd6a0d98e4453919bdec6358a63ee","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"bf4f415fed634f93be01469a6a5dacb8","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"27c82e179d414c01b892799ea8a9e087","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1c63f5b2a31b4d24a52a7cfdd3dab78e","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"d5b120848f784e12bc6dac2add472b42","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"86f17dc92bd046ba9854a63c169f5454","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"2c3b451058bf456eb63bd733545ff59a","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"748c87ad00144363b9be2b37750e1485","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"bff251a4cc714dce87aee01bba91426f","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"b3e264df47c44ec6ad6ec553416af97e","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"2a4180ebba9c41c1a3b2bf3e435318e7","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"577943af596a43e7b13e53604065b5b6","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ef36b02ea6a148cd9d4dc1a175676f02","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"215c9d0104dc4ba1bfd5811f151185b3","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"6fd16cbc162a4ac1957b9384e621f3b5","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"418ebab394e84add932d0b2c800fcadc","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"11005bae772748919f7b89c0297ff603","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"997b5d7fcdb84286ac7f3bc6f781512d","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"da1189a0ba1643a08c11a525190c1098","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"2cd31800e0f34cbda7b0686080ad11ae","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1c62a83111674710828038599da56548","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"cec23d98048b475fb19bc9d3b4c917e2","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"316c86df55384dcba1097e52ddcb1714","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"0feee6bb3d45467dbcdb69cb35ca264f","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"90e4997a955c4cbabc761fdf03aae7dd","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ad95d0b9bd374151a7b1a3dbb982ad90","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"d22d8656ffb64ec9afb8996936783953","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"4eeee070d59340d5894a38104ed7e4e5","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"08c0edb6da744b20a8703fac5df3ea2b","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"6bcb7b3b633a42db9c0063dbd2a7d5e9","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"2f24bc551a654fc5bf47d15d088bd6d7","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"550161b5295a4cf5b8a07ce105f52658","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"8215088617f143debe1d3cf16b95c7df","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"a4be126eef9d489a89f59a0a78aaba45","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"c7eb44813c624b35a4ee1ba5bf2e61d1","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"756b6f7ebecd43508d29646350e1ca00","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"9738fcf4832e49a59b4ef2b2062386cb","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"03deb5a84f8f4098892cbef0ea400244","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"fa767ffc4b434f9481975e2bf71961d1","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"b6b81995dec74fe3a21bb3de3a0422e3","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1d71c4611bc94e60aa859f5515238005","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"7b34db763b6d4b79a61fa279b00f7cfd","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"c9e5568d5b454643b45e752b293ac326","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ac292fd316864b3aa33325f9b3508434","version_major":2,"version_minor":0}
+</script>
+</div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"f737340b07b54135aea222a476aecbfe","version_major":2,"version_minor":0}
+</script>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="275">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>plt.plot(combined_losses)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-36-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="276">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>plt.plot(reconstruction_losses)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-37-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="277">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>plt.plot(kl_losses)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-38-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="287">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_latent_space_with_labels(num_classes, dataloader, encoding_fn, device):</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> {i:[] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_classes)}</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, (features, targets) <span class="kw">in</span> <span class="bu">enumerate</span>(dataloader):</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>            features <span class="op">=</span> features.to(device)</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>            targets <span class="op">=</span> targets.to(device)</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>            embedding <span class="op">=</span> encoding_fn(features)</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_classes):</span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> i <span class="kw">in</span> targets:</span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>                    mask <span class="op">=</span> targets <span class="op">==</span> i</span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>                    d[i].append(embedding[mask].to(<span class="st">'cpu'</span>).numpy())</span>
+<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a>    colors <span class="op">=</span> <span class="bu">list</span>(mcolors.TABLEAU_COLORS.items())</span>
+<span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_classes):</span>
+<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>        d[i] <span class="op">=</span> np.concatenate(d[i])</span>
+<span id="cb47-20"><a href="#cb47-20" aria-hidden="true" tabindex="-1"></a>        plt.scatter(</span>
+<span id="cb47-21"><a href="#cb47-21" aria-hidden="true" tabindex="-1"></a>            d[i][:, <span class="dv">0</span>], d[i][:, <span class="dv">1</span>],</span>
+<span id="cb47-22"><a href="#cb47-22" aria-hidden="true" tabindex="-1"></a>            color<span class="op">=</span>colors[i][<span class="dv">1</span>],</span>
+<span id="cb47-23"><a href="#cb47-23" aria-hidden="true" tabindex="-1"></a>            label<span class="op">=</span><span class="ss">f'</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">'</span>,</span>
+<span id="cb47-24"><a href="#cb47-24" aria-hidden="true" tabindex="-1"></a>            alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb47-25"><a href="#cb47-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-26"><a href="#cb47-26" aria-hidden="true" tabindex="-1"></a>    plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="290">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>plot_latent_space_with_labels(</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    num_classes<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    dataloader<span class="op">=</span>dataloader,</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    encoding_fn<span class="op">=</span>vae.encoding_fn,</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    device<span class="op">=</span>DEVICE)</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-40-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="449">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>y_axis <span class="op">=</span> torch.arange(<span class="op">-</span><span class="fl">1.2</span>, <span class="dv">2</span>, <span class="fl">0.2</span>)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>x_axis <span class="op">=</span> torch.zeros(<span class="dv">16</span>)</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> torch.stack((x_axis, y_axis), dim<span class="op">=</span><span class="dv">1</span>).to(DEVICE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="450">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>samples</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="450">
+<pre><code>tensor([[ 0.0000e+00, -1.2000e+00],
+        [ 0.0000e+00, -1.0000e+00],
+        [ 0.0000e+00, -8.0000e-01],
+        [ 0.0000e+00, -6.0000e-01],
+        [ 0.0000e+00, -4.0000e-01],
+        [ 0.0000e+00, -2.0000e-01],
+        [ 0.0000e+00, -4.7684e-08],
+        [ 0.0000e+00,  2.0000e-01],
+        [ 0.0000e+00,  4.0000e-01],
+        [ 0.0000e+00,  6.0000e-01],
+        [ 0.0000e+00,  8.0000e-01],
+        [ 0.0000e+00,  1.0000e+00],
+        [ 0.0000e+00,  1.2000e+00],
+        [ 0.0000e+00,  1.4000e+00],
+        [ 0.0000e+00,  1.6000e+00],
+        [ 0.0000e+00,  1.8000e+00]], device='cuda:0')</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="451">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_images(images, nmax<span class="op">=</span><span class="dv">64</span>):</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">8</span>))</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    ax.set_xticks([])<span class="op">;</span> ax.set_yticks([])</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    ax.imshow(make_grid((images.detach()[:nmax]), nrow<span class="op">=</span><span class="dv">8</span>).permute(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="452">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>img_smaples <span class="op">=</span> []</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> sample <span class="kw">in</span> samples:</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    vae.<span class="bu">eval</span>()</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>        sample_out <span class="op">=</span> vae.decoder(sample)</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>        img_smaples.append(sample_out.squeeze(<span class="dv">0</span>).detach().cpu())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="453">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> make_grid(img_smaples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="516">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show(imgs):</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> <span class="bu">isinstance</span>(imgs, <span class="bu">list</span>):</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>        imgs <span class="op">=</span> [imgs]</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    fig, axs <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="bu">len</span>(imgs), squeeze<span class="op">=</span><span class="va">False</span>, figsize<span class="op">=</span>(<span class="dv">12</span>,<span class="dv">12</span>))</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, img <span class="kw">in</span> <span class="bu">enumerate</span>(imgs):</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>        img <span class="op">=</span> img.detach()</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>        img <span class="op">=</span> transforms.functional.to_pil_image(img)</span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>        axs[i, <span class="dv">0</span>].imshow(np.asarray(img))</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>        axs[i, <span class="dv">0</span>].<span class="bu">set</span>(xticklabels<span class="op">=</span>[], yticklabels<span class="op">=</span>[], xticks<span class="op">=</span>[], yticks<span class="op">=</span>[])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="517">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>show(grid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-47-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="424">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>vae.<span class="bu">eval</span>()</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    sample_out <span class="op">=</span> vae.decoder(torch.tensor([<span class="fl">0.</span>, <span class="fl">0.8</span>]).cuda())</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    plt.imshow(sample_out.detach().reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">64</span>, <span class="dv">64</span>).cpu().permute(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="vae_files/figure-html/cell-48-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
